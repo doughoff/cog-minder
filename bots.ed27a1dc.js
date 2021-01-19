@@ -25106,7 +25106,7 @@ var Spectrum;
 
 ;
 },{}],"ts/common.ts":[function(require,module,exports) {
-"use strict"; // import "jquery";
+"use strict";
 
 var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
   if (k2 === undefined) k2 = k;
@@ -25143,7 +25143,7 @@ var __importStar = this && this.__importStar || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.valueOrDefault = exports.setSpoilersState = exports.randomInt = exports.resetButtonGroup = exports.initData = exports.nameToId = exports.getSpoilersState = exports.getSelectedButtonId = exports.getNoPrefixName = exports.getItem = exports.getBot = exports.gallerySort = exports.flatten = exports.escapeHtml = exports.createItemDataContent = exports.createBotDataContent = exports.entityMap = exports.itemData = exports.botData = void 0; // Common code
+exports.valueOrDefault = exports.setSpoilersState = exports.randomInt = exports.initData = exports.nameToId = exports.getNoPrefixName = exports.getItem = exports.getBot = exports.gallerySort = exports.flatten = exports.escapeHtml = exports.createItemDataContent = exports.createBotDataContent = exports.entityMap = exports.itemData = exports.botData = void 0; // Common code
 
 const bots = __importStar(require("../json/bots.json"));
 
@@ -25406,11 +25406,13 @@ function createBotDataContent(bot) {
   }
 
   function itemLine(itemString) {
-    return `<pre class="popover-line"> ${itemString}</pre>`;
+    itemString = itemString.padEnd(46);
+    return "" + '<pre class="popover-part">' + '<span class="bot-popover-item-bracket bot-popover-item-bracket-invisible">[</span>' + `${itemString}` + '<span class="bot-popover-item-bracket bot-popover-item-bracket-invisible">]</span>' + '</pre>';
   }
 
   function itemLineOption(itemString, i) {
-    return `<pre class="popover-line"><span class="popover-option">` + ` ${String.fromCharCode(97 + i)})</span><span> ${itemString}</span></pre>`;
+    itemString = itemString.padEnd(43);
+    return "" + '<pre class="popover-line">' + '<span class="bot-popover-item-bracket bot-popover-item-bracket-invisible">[</span>' + `<span class="popover-option">${String.fromCharCode(97 + i)}) </span>` + `<span>${itemString}</span>` + '<span class="bot-popover-item-bracket bot-popover-item-bracket-invisible">]</span>' + '</pre>';
   } // Create overview
 
 
@@ -25480,6 +25482,10 @@ function createBotDataContent(bot) {
         `;
     resistances.forEach(damageType => {
       const resistValue = bot.resistances[damageType];
+
+      if (resistValue === undefined) {
+        return;
+      }
 
       if (resistValue > 0) {
         html += rangeLine(damageType, resistValue.toString() + "%", resistValue, undefined, 0, 100, ColorScheme.Green);
@@ -25898,7 +25904,7 @@ function gallerySort(a, b) {
     // The export index will always be ordered for different prefix
     // versions of the same parts so this is the best way to sort
     // them how the in-game gallery does.
-    res = parseInt(getItem(a)["Index"]) - parseInt(getItem(b)["Index"]);
+    res = getItem(a).index - getItem(b).index;
   }
 
   return res;
@@ -25935,25 +25941,7 @@ function getNoPrefixName(name) {
   return newName;
 }
 
-exports.getNoPrefixName = getNoPrefixName; // Gets the ID of the selected button in a button group
-
-function getSelectedButtonId(selector) {
-  return selector.children(".active").attr("id");
-}
-
-exports.getSelectedButtonId = getSelectedButtonId; // Gets the stored spoilers state
-
-function getSpoilersState() {
-  let value = valueOrDefault(window.localStorage.getItem("spoilers"), "None");
-
-  if (typeof value != "string" || value != "None" && value != "Spoilers" && value != "Redacted") {
-    value = "None";
-  }
-
-  return value;
-}
-
-exports.getSpoilersState = getSpoilersState; // Converts an item or bot's name to an HTML id
+exports.getNoPrefixName = getNoPrefixName; // Converts an item or bot's name to an HTML id
 
 const nameToIdRegex = /[ /.'"\]\[]]*/g;
 
@@ -25969,7 +25957,7 @@ function initData() {
   exports.botData = {};
   exports.itemData = {}; // Create items
 
-  Object.keys(items).forEach(itemName => {
+  Object.keys(items).forEach((itemName, index) => {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 
     if (itemName === "default") {
@@ -26028,7 +26016,8 @@ function initData() {
           type: item.Type,
           description: item.Description,
           categories: itemCategories,
-          life: item.Life
+          life: item.Life,
+          index: index
         };
         newItem = otherItem;
         break;
@@ -26053,7 +26042,8 @@ function initData() {
           description: item.Description,
           categories: itemCategories,
           fabrication: fabrication,
-          powerStability: item["Power Stability"] == null ? undefined : parseIntOrUndefined(item["Power Stability"].slice(0, -1))
+          powerStability: item["Power Stability"] == null ? undefined : parseIntOrUndefined(item["Power Stability"].slice(0, -1)),
+          index: index
         };
         newItem = powerItem;
         break;
@@ -26087,7 +26077,8 @@ function initData() {
           heatPerMove: parseIntOrUndefined(item["Heat/Move"]),
           matterUpkeep: parseIntOrUndefined(item["Matter Upkeep"]),
           modPerExtra: parseIntOrUndefined(item["Mod/Extra"]),
-          siege: item.Siege
+          siege: item.Siege,
+          index: index
         };
         newItem = propItem;
         break;
@@ -26113,7 +26104,8 @@ function initData() {
           heatGeneration: parseIntOrUndefined(item["Heat Generation"]),
           matterUpkeep: parseIntOrUndefined(item["Matter Upkeep"]),
           mass: (_g = parseIntOrUndefined(item.Mass)) !== null && _g !== void 0 ? _g : 0,
-          specialTrait: item["Special Trait"]
+          specialTrait: item["Special Trait"],
+          index: index
         };
         newItem = utilItem;
         break;
@@ -26164,7 +26156,8 @@ function initData() {
           shotMatter: parseIntOrUndefined(item["Shot Matter"]),
           spectrum: item.Spectrum,
           waypoints: item.Waypoints,
-          arc: undefined
+          arc: undefined,
+          index: index
         };
         newItem = weaponItem;
         break;
@@ -26303,15 +26296,8 @@ function parseIntOrUndefined(value) {
   }
 
   return int;
-} // Clears a button group's state and sets the first item to be active
+} // Gets a random integer between the min and max values (inclusive)
 
-
-function resetButtonGroup(group) {
-  group.children().removeClass("active");
-  group.children("label:first-of-type").addClass("active");
-}
-
-exports.resetButtonGroup = resetButtonGroup; // Gets a random integer between the min and max values (inclusive)
 
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -37420,7 +37406,146 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-},{"process":"../node_modules/process/browser.js"}],"../node_modules/popper.js/dist/esm/popper.js":[function(require,module,exports) {
+},{"process":"../node_modules/process/browser.js"}],"ts/commonJquery.ts":[function(require,module,exports) {
+"use strict"; // Common Jquery related code
+
+var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = this && this.__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = this && this.__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.resetButtonGroup = exports.getSpoilersState = exports.getSelectedButtonId = exports.enableBotInfoItemPopovers = void 0;
+
+const common_1 = require("./common");
+
+const jQuery = __importStar(require("jquery"));
+
+const $ = jQuery.noConflict();
+const nameRegex = /\[([\w. '"\-/]*) \(\d/;
+const optionNameRegex = /([\w. '"\-/]*) \(\d/; // Enables nested bot info popovers given a selector to the root bot popover
+
+function enableBotInfoItemPopovers(selector) {
+  selector.on("shown.bs.popover", e => {
+    // Set up popovers for items on bots
+    const body = $(`#${$(e.target).attr("aria-describedby")}`).children(".popover-body");
+    const items = body.find(".popover-part");
+    items.each((_, element) => {
+      const selector = $(element);
+      const result = nameRegex.exec(selector.text());
+
+      if (result === null || !(result[1] in common_1.itemData)) {
+        // Not a valid item
+        return;
+      } // Set up popover attributes
+
+
+      const weapon = common_1.getItem(result[1]);
+      selector.data("html", true);
+      selector.data("content", common_1.createItemDataContent(weapon));
+      selector.data("toggle", "popover");
+      selector.addClass("bot-popover-item");
+      selector.popover(); // Show/hide surrounding brackets to indicate selection
+
+      selector.on("mouseenter", () => {
+        selector.children("span").removeClass("bot-popover-item-bracket-invisible");
+      });
+      selector.on("mouseleave", () => {
+        selector.children("span").addClass("bot-popover-item-bracket-invisible");
+      });
+      selector.data("toggle", "popover");
+    });
+    const optionItems = body.find(".popover-option").parent();
+    optionItems.each((_, element) => {
+      const selector = $(element);
+      const result = optionNameRegex.exec(selector.find("span:nth-child(3)").text());
+
+      if (result === null || !(result[1] in common_1.itemData)) {
+        // Not a valid item
+        return;
+      } // Set up popover attributes
+
+
+      const weapon = common_1.getItem(result[1]);
+      selector.data("html", true);
+      selector.data("content", common_1.createItemDataContent(weapon));
+      selector.data("toggle", "popover");
+      selector.addClass("bot-popover-item");
+      selector.popover(); // Show/hide surrounding brackets to indicate selection
+
+      selector.on("mouseenter", () => {
+        selector.children(".bot-popover-item-bracket").removeClass("bot-popover-item-bracket-invisible");
+      });
+      selector.on("mouseleave", () => {
+        selector.children(".bot-popover-item-bracket").addClass("bot-popover-item-bracket-invisible");
+      });
+      selector.data("toggle", "popover");
+    });
+  });
+  selector.on("hide.bs.popover", e => {
+    // Dispose nested popovers when the base popover is closed
+    const body = $(`#${$(e.target).attr("aria-describedby")}`).children(".popover-body");
+    const items = body.find(".bot-popover-item");
+    items.popover("dispose");
+  });
+}
+
+exports.enableBotInfoItemPopovers = enableBotInfoItemPopovers; // Gets the ID of the selected button in a button group
+
+function getSelectedButtonId(selector) {
+  return selector.children(".active").attr("id");
+}
+
+exports.getSelectedButtonId = getSelectedButtonId; // Gets the stored spoilers state
+
+function getSpoilersState() {
+  let value = common_1.valueOrDefault(window.localStorage.getItem("spoilers"), "None");
+
+  if (typeof value != "string" || value != "None" && value != "Spoilers" && value != "Redacted") {
+    value = "None";
+  }
+
+  return value;
+}
+
+exports.getSpoilersState = getSpoilersState; // Clears a button group's state and sets the first item to be active
+
+function resetButtonGroup(group) {
+  group.children().removeClass("active");
+  group.children("label:first-of-type").addClass("active");
+}
+
+exports.resetButtonGroup = resetButtonGroup;
+},{"./common":"ts/common.ts","jquery":"../node_modules/jquery/dist/jquery.js"}],"../node_modules/popper.js/dist/esm/popper.js":[function(require,module,exports) {
 var global = arguments[3];
 "use strict";
 
@@ -44508,9 +44633,13 @@ Object.defineProperty(exports, "__esModule", {
 
 const common_1 = require("./common");
 
-require("bootstrap");
+const commonJquery_1 = require("./commonJquery");
 
 const jQuery = __importStar(require("jquery"));
+
+const popper = __importStar(require("popper.js"));
+
+require("bootstrap");
 
 const jq = jQuery.noConflict();
 jq(function ($) {
@@ -44534,6 +44663,8 @@ jq(function ($) {
     const botNames = Object.keys(common_1.botData);
     const botsGrid = $("#botsGrid");
     botNames.forEach(botName => {
+      // Creates button that will toggle a popover when pressed displaying
+      // various stats and items
       const bot = common_1.botData[botName];
       const botId = common_1.nameToId(botName);
       const element = $(`<button
@@ -44547,14 +44678,16 @@ jq(function ($) {
       botElements[botName] = element;
       botsGrid.append(element);
     });
-    $('#botsGrid > [data-toggle="popover"]').popover();
+    const popoverSelector = $('#botsGrid > [data-toggle="popover"]');
+    popoverSelector.popover();
+    commonJquery_1.enableBotInfoItemPopovers(popoverSelector);
   } // Gets a filter function combining all current filters
 
 
   function getBotFilter() {
     const filters = []; // Spoilers filter
 
-    const spoilersState = common_1.getSpoilersState();
+    const spoilersState = commonJquery_1.getSpoilersState();
 
     if (spoilersState === "None") {
       filters.push(bot => !bot.categories.some(c => c === "Spoilers" || c === "Redacted"));
@@ -44610,7 +44743,7 @@ jq(function ($) {
     } // Faction filter
 
 
-    const factionId = common_1.getSelectedButtonId($("#factionContainer"));
+    const factionId = commonJquery_1.getSelectedButtonId($("#factionContainer"));
 
     if (factionId in factionIdToCategoryName) {
       const categoryName = factionIdToCategoryName[factionId];
@@ -44625,10 +44758,14 @@ jq(function ($) {
 
 
   function init() {
+    popper.default.Defaults.onCreate = data => {
+      console.log(data);
+    };
+
     common_1.initData();
     createBots(); // Load spoilers saved state
 
-    $("#spoilers").text(common_1.getSpoilersState()); // Set initial state
+    $("#spoilers").text(commonJquery_1.getSpoilersState()); // Set initial state
 
     updateFactionVisibility();
     resetFilters(); // Register handlers
@@ -44650,9 +44787,12 @@ jq(function ($) {
     });
     $("#factionContainer > label > input").on("change", updateBots);
     $(window).on("click", e => {
-      // If clicking outside of a popover close the current one
       if ($(e.target).parents(".popover").length === 0 && $(".popover").length >= 1) {
+        // If clicking outside of a popover close the current one
         $('[data-toggle="popover"]').not(e.target).popover("hide");
+      } else if ($(e.target).parents(".popover").length === 1 && $(".popover").length > 1) {
+        // If clicking inside of a popover close any nested popovers
+        $(e.target).parents(".popover").find('.bot-popover-item').not(e.target).not($(e.target).parents()).popover("hide");
       }
     }); // Enable tooltips
 
@@ -44666,7 +44806,7 @@ jq(function ($) {
     $("#class").val("");
     $("#part").val(""); // Reset buttons
 
-    common_1.resetButtonGroup($("#factionContainer")); // Update visible bots
+    commonJquery_1.resetButtonGroup($("#factionContainer")); // Update visible bots
 
     updateBots();
   } // Sorts bot names
@@ -44674,9 +44814,7 @@ jq(function ($) {
 
   function sortBotNames(botNames) {
     botNames.sort((a, b) => {
-      let aValue = typeof a === "string" ? a : "";
-      let bValue = typeof b === "string" ? b : "";
-      return aValue.localeCompare(bValue);
+      return a.localeCompare(b);
     });
     return botNames;
   } // Clears all existing bots and adds new ones based on the filters
@@ -44716,7 +44854,7 @@ jq(function ($) {
 
 
   function updateFactionVisibility() {
-    const state = common_1.getSpoilersState();
+    const state = commonJquery_1.getSpoilersState();
     const showSpoilers = state === "Spoilers";
     const showRedacted = state === "Redacted";
 
@@ -44732,7 +44870,7 @@ jq(function ($) {
     }
   }
 });
-},{"./common":"ts/common.ts","bootstrap":"../node_modules/bootstrap/dist/js/bootstrap.js","jquery":"../node_modules/jquery/dist/jquery.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./common":"ts/common.ts","./commonJquery":"ts/commonJquery.ts","jquery":"../node_modules/jquery/dist/jquery.js","popper.js":"../node_modules/popper.js/dist/esm/popper.js","bootstrap":"../node_modules/bootstrap/dist/js/bootstrap.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -44760,7 +44898,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "46651" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "38751" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

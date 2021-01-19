@@ -25106,7 +25106,7 @@ var Spectrum;
 
 ;
 },{}],"ts/common.ts":[function(require,module,exports) {
-"use strict"; // import "jquery";
+"use strict";
 
 var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
   if (k2 === undefined) k2 = k;
@@ -25143,7 +25143,7 @@ var __importStar = this && this.__importStar || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.valueOrDefault = exports.setSpoilersState = exports.randomInt = exports.resetButtonGroup = exports.initData = exports.nameToId = exports.getSpoilersState = exports.getSelectedButtonId = exports.getNoPrefixName = exports.getItem = exports.getBot = exports.gallerySort = exports.flatten = exports.escapeHtml = exports.createItemDataContent = exports.createBotDataContent = exports.entityMap = exports.itemData = exports.botData = void 0; // Common code
+exports.valueOrDefault = exports.setSpoilersState = exports.randomInt = exports.initData = exports.nameToId = exports.getNoPrefixName = exports.getItem = exports.getBot = exports.gallerySort = exports.flatten = exports.escapeHtml = exports.createItemDataContent = exports.createBotDataContent = exports.entityMap = exports.itemData = exports.botData = void 0; // Common code
 
 const bots = __importStar(require("../json/bots.json"));
 
@@ -25406,11 +25406,13 @@ function createBotDataContent(bot) {
   }
 
   function itemLine(itemString) {
-    return `<pre class="popover-line"> ${itemString}</pre>`;
+    itemString = itemString.padEnd(46);
+    return "" + '<pre class="popover-part">' + '<span class="bot-popover-item-bracket bot-popover-item-bracket-invisible">[</span>' + `${itemString}` + '<span class="bot-popover-item-bracket bot-popover-item-bracket-invisible">]</span>' + '</pre>';
   }
 
   function itemLineOption(itemString, i) {
-    return `<pre class="popover-line"><span class="popover-option">` + ` ${String.fromCharCode(97 + i)})</span><span> ${itemString}</span></pre>`;
+    itemString = itemString.padEnd(43);
+    return "" + '<pre class="popover-line">' + '<span class="bot-popover-item-bracket bot-popover-item-bracket-invisible">[</span>' + `<span class="popover-option">${String.fromCharCode(97 + i)}) </span>` + `<span>${itemString}</span>` + '<span class="bot-popover-item-bracket bot-popover-item-bracket-invisible">]</span>' + '</pre>';
   } // Create overview
 
 
@@ -25480,6 +25482,10 @@ function createBotDataContent(bot) {
         `;
     resistances.forEach(damageType => {
       const resistValue = bot.resistances[damageType];
+
+      if (resistValue === undefined) {
+        return;
+      }
 
       if (resistValue > 0) {
         html += rangeLine(damageType, resistValue.toString() + "%", resistValue, undefined, 0, 100, ColorScheme.Green);
@@ -25898,7 +25904,7 @@ function gallerySort(a, b) {
     // The export index will always be ordered for different prefix
     // versions of the same parts so this is the best way to sort
     // them how the in-game gallery does.
-    res = parseInt(getItem(a)["Index"]) - parseInt(getItem(b)["Index"]);
+    res = getItem(a).index - getItem(b).index;
   }
 
   return res;
@@ -25935,25 +25941,7 @@ function getNoPrefixName(name) {
   return newName;
 }
 
-exports.getNoPrefixName = getNoPrefixName; // Gets the ID of the selected button in a button group
-
-function getSelectedButtonId(selector) {
-  return selector.children(".active").attr("id");
-}
-
-exports.getSelectedButtonId = getSelectedButtonId; // Gets the stored spoilers state
-
-function getSpoilersState() {
-  let value = valueOrDefault(window.localStorage.getItem("spoilers"), "None");
-
-  if (typeof value != "string" || value != "None" && value != "Spoilers" && value != "Redacted") {
-    value = "None";
-  }
-
-  return value;
-}
-
-exports.getSpoilersState = getSpoilersState; // Converts an item or bot's name to an HTML id
+exports.getNoPrefixName = getNoPrefixName; // Converts an item or bot's name to an HTML id
 
 const nameToIdRegex = /[ /.'"\]\[]]*/g;
 
@@ -25969,7 +25957,7 @@ function initData() {
   exports.botData = {};
   exports.itemData = {}; // Create items
 
-  Object.keys(items).forEach(itemName => {
+  Object.keys(items).forEach((itemName, index) => {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 
     if (itemName === "default") {
@@ -26028,7 +26016,8 @@ function initData() {
           type: item.Type,
           description: item.Description,
           categories: itemCategories,
-          life: item.Life
+          life: item.Life,
+          index: index
         };
         newItem = otherItem;
         break;
@@ -26053,7 +26042,8 @@ function initData() {
           description: item.Description,
           categories: itemCategories,
           fabrication: fabrication,
-          powerStability: item["Power Stability"] == null ? undefined : parseIntOrUndefined(item["Power Stability"].slice(0, -1))
+          powerStability: item["Power Stability"] == null ? undefined : parseIntOrUndefined(item["Power Stability"].slice(0, -1)),
+          index: index
         };
         newItem = powerItem;
         break;
@@ -26087,7 +26077,8 @@ function initData() {
           heatPerMove: parseIntOrUndefined(item["Heat/Move"]),
           matterUpkeep: parseIntOrUndefined(item["Matter Upkeep"]),
           modPerExtra: parseIntOrUndefined(item["Mod/Extra"]),
-          siege: item.Siege
+          siege: item.Siege,
+          index: index
         };
         newItem = propItem;
         break;
@@ -26113,7 +26104,8 @@ function initData() {
           heatGeneration: parseIntOrUndefined(item["Heat Generation"]),
           matterUpkeep: parseIntOrUndefined(item["Matter Upkeep"]),
           mass: (_g = parseIntOrUndefined(item.Mass)) !== null && _g !== void 0 ? _g : 0,
-          specialTrait: item["Special Trait"]
+          specialTrait: item["Special Trait"],
+          index: index
         };
         newItem = utilItem;
         break;
@@ -26164,7 +26156,8 @@ function initData() {
           shotMatter: parseIntOrUndefined(item["Shot Matter"]),
           spectrum: item.Spectrum,
           waypoints: item.Waypoints,
-          arc: undefined
+          arc: undefined,
+          index: index
         };
         newItem = weaponItem;
         break;
@@ -26303,15 +26296,8 @@ function parseIntOrUndefined(value) {
   }
 
   return int;
-} // Clears a button group's state and sets the first item to be active
+} // Gets a random integer between the min and max values (inclusive)
 
-
-function resetButtonGroup(group) {
-  group.children().removeClass("active");
-  group.children("label:first-of-type").addClass("active");
-}
-
-exports.resetButtonGroup = resetButtonGroup; // Gets a random integer between the min and max values (inclusive)
 
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -26334,1426 +26320,7 @@ function valueOrDefault(val, defaultVal) {
 }
 
 exports.valueOrDefault = valueOrDefault;
-},{"../json/bots.json":"json/bots.json","../json/categories.json":"json/categories.json","../json/items.json":"json/items.json","./itemTypes":"ts/itemTypes.ts"}],"ts/botTypes.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.BotSize = exports.BotImmunity = exports.BotCategory = void 0;
-var BotCategory;
-
-(function (BotCategory) {
-  BotCategory["Alien"] = "Alien";
-  BotCategory["Architect"] = "Architect";
-  BotCategory["Derelict"] = "Derelict";
-  BotCategory["Drone"] = "Drone";
-  BotCategory["Exiles"] = "Exiles";
-  BotCategory["Prototype"] = "Prototype";
-  BotCategory["Redacted"] = "Redacted";
-  BotCategory["Spoilers"] = "Spoilers";
-  BotCategory["OB10"] = "0b10";
-  BotCategory["Warlord"] = "Warlord";
-  BotCategory["Zhirov"] = "Zhirov";
-  BotCategory["Zionite"] = "Zionite";
-})(BotCategory = exports.BotCategory || (exports.BotCategory = {}));
-
-;
-var BotImmunity;
-
-(function (BotImmunity) {
-  BotImmunity["Coring"] = "Coring";
-  BotImmunity["Criticals"] = "Criticals";
-  BotImmunity["Dismemberment"] = "Dismemberment";
-  BotImmunity["Disruption"] = "Disruption";
-  BotImmunity["Hacking"] = "Hacking";
-  BotImmunity["Jamming"] = "Jamming";
-  BotImmunity["Meltdown"] = "Meltdown";
-})(BotImmunity = exports.BotImmunity || (exports.BotImmunity = {}));
-
-;
-var BotSize;
-
-(function (BotSize) {
-  BotSize["Huge"] = "Huge";
-  BotSize["Large"] = "Large";
-  BotSize["Medium"] = "Medium";
-  BotSize["Small"] = "Small";
-  BotSize["Tiny"] = "Tiny";
-})(BotSize = exports.BotSize || (exports.BotSize = {}));
-
-;
-},{}],"ts/simulatorCalcs.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.simulateCombat = exports.getRangedVolleyTime = exports.getRegen = exports.getRecoil = exports.getBotDefensiveState = exports.calculateResistDamage = exports.volleyTimeMap = exports.maxVolleys = void 0; // Battle simulation calculation functions/constants
-
-const botTypes_1 = require("./botTypes");
-
-const common_1 = require("./common");
-
-const itemTypes_1 = require("./itemTypes");
-
-const minAccuracy = 10;
-const maxRangedAccuracy = 95;
-const maxMeleeAccuracy = 100;
-exports.maxVolleys = 100000; // Array of damage reducing parts to sort
-// 11. Apply the first and only first defense applicable from the 
-// following list: phase wall, 75% personal shield (VFP etc), 
-// Force Field, Shield Generator, stasis bubble, active Stasis Trap,
-// Remote Shield, 50% remote shield (Energy Mantle etc.), Hardlight Generator.
-
-const damageReductionSortOrder = ["Phase Wall", "Vortex Field Projector", "7V-RTL'S Ultimate Field", "Force Field", "Imp. Force Field", "Adv. Force Field", "Exp. Force Field", "Shield Generator", "Imp. Shield Generator", "Adv. Shield Generator", "Exp. Shield Generator", "Stasis Bubble", "Stasis Trap", "Remote Shield", "Imp. Remote Shield", "Remote Force Field", "Imp. Remote Force Field", "Energy Mantle", "Imp. Energy Mantle", "AEGIS Remote Shield"];
-const externalDamageReductionMap = {
-  "Remote Shield": 0.75,
-  "Stasis Trap": 0.75,
-  "Phase Wall": 0.5,
-  "Remote Force Field": 0.5,
-  "Stasis Bubble": 0.5
-}; // Array of melee analysis accuracy increases
-
-const meleeAnalysisAccuracy = [5, 6, 8, 12];
-const categoryAntimissile = 0;
-const categoryAvoid = 1;
-const categoryCorruptionIgnore = 2;
-const categoryDamageReduction = 3;
-const categoryResist = 4;
-const categoryRangedAvoid = 5;
-const categorySelfDamageReduction = 6;
-const categoryShielding = 7;
-const specialItems = {
-  // Antimissile, chance to shoot down launcher projectiles per tile
-  "Point Defense System": {
-    category: categoryAntimissile,
-    chance: 8
-  },
-  "Point Defense Array": {
-    category: categoryAntimissile,
-    chance: 16
-  },
-  "Antimissile System": {
-    category: categoryAntimissile,
-    chance: 24
-  },
-  // Avoid, - all weapon accuracy
-  "Maneuvering Thrusters": {
-    category: categoryAvoid,
-    legs: 3,
-    other: 6
-  },
-  "Imp. Maneuvering Thrusters": {
-    category: categoryAvoid,
-    legs: 5,
-    other: 10
-  },
-  "Reaction Control System": {
-    category: categoryAvoid,
-    legs: 6,
-    other: 12
-  },
-  "Adv. Reaction Control System": {
-    category: categoryAvoid,
-    legs: 7,
-    other: 14
-  },
-  // Corruption ignore, % of ignoring corruption addition
-  "Dynamic Insulation System": {
-    category: categoryCorruptionIgnore,
-    ignore: 50
-  },
-  "Imp. Dynamic Insulation System": {
-    category: categoryCorruptionIgnore,
-    ignore: 67
-  },
-  "Adv. Dynamic Insulation System": {
-    category: categoryCorruptionIgnore,
-    ignore: 75
-  },
-  // Damage reduction, (val * damage = reduced damage)
-  "Adv. Shield Generator": {
-    category: categoryDamageReduction,
-    reduction: .75
-  },
-  "Exp. Shield Generator": {
-    category: categoryDamageReduction,
-    reduction: .75
-  },
-  "Imp. Remote Shield": {
-    category: categoryDamageReduction,
-    reduction: .75
-  },
-  "Imp. Shield Generator": {
-    category: categoryDamageReduction,
-    reduction: .75
-  },
-  "Remote Shield": {
-    category: categoryDamageReduction,
-    reduction: .75
-  },
-  "Shield Generator": {
-    category: categoryDamageReduction,
-    reduction: .75
-  },
-  "AEGIS Remote Shield": {
-    category: categoryDamageReduction,
-    reduction: .50
-  },
-  "Adv. Force Field": {
-    category: categoryDamageReduction,
-    reduction: .50
-  },
-  "Exp. Force Field": {
-    category: categoryDamageReduction,
-    reduction: .50
-  },
-  "Energy Mantle": {
-    category: categoryDamageReduction,
-    reduction: .50
-  },
-  "Force Field": {
-    category: categoryDamageReduction,
-    reduction: .50
-  },
-  "Imp. Energy Mantle": {
-    category: categoryDamageReduction,
-    reduction: .50
-  },
-  "Imp. Force Field": {
-    category: categoryDamageReduction,
-    reduction: .50
-  },
-  "Imp. Remote Force Field": {
-    category: categoryDamageReduction,
-    reduction: .50
-  },
-  "Remote Force Field": {
-    category: categoryDamageReduction,
-    reduction: .50
-  },
-  "7V-RTL's Ultimate Field": {
-    category: categoryDamageReduction,
-    reduction: .25
-  },
-  "Vortex Field Projector": {
-    category: categoryDamageReduction,
-    reduction: .25
-  },
-  // Resist, % of damage type resisted
-  "Insulated Plating": {
-    category: categoryResist,
-    resists: {
-      electromagnetic: 15
-    }
-  },
-  "Med. Insulated Plating": {
-    category: categoryResist,
-    resists: {
-      electromagnetic: 20
-    }
-  },
-  "EM Shield": {
-    category: categoryResist,
-    resists: {
-      electromagnetic: 25
-    }
-  },
-  "Hvy. Insulated Plating": {
-    category: categoryResist,
-    resists: {
-      electromagnetic: 30
-    }
-  },
-  "EM Disruption": {
-    category: categoryResist,
-    resists: {
-      electromagnetic: 50
-    }
-  },
-  "EM Dispersion": {
-    category: categoryResist,
-    resists: {
-      electromagnetic: 75
-    }
-  },
-  "Damper Plating": {
-    category: categoryResist,
-    resists: {
-      electromagnetic: 90
-    }
-  },
-  "8R-AWN's Armor/EX": {
-    category: categoryResist,
-    resists: {
-      explosive: 90
-    }
-  },
-  "Shock Absorption System": {
-    category: categoryResist,
-    resists: {
-      explosive: 25
-    }
-  },
-  "Imp. Shock Absorption System": {
-    category: categoryResist,
-    resists: {
-      explosive: 50
-    }
-  },
-  "Exp. Shock Absorption System": {
-    category: categoryResist,
-    resists: {
-      explosive: 75
-    }
-  },
-  "Mak. Kinetic Plating": {
-    category: categoryResist,
-    resists: {
-      kinetic: 20
-    }
-  },
-  "Focal Shield": {
-    category: categoryResist,
-    resists: {
-      kinetic: 20
-    }
-  },
-  "Reactive Plating": {
-    category: categoryResist,
-    resists: {
-      kinetic: 20
-    }
-  },
-  "Imp. Focal Shield": {
-    category: categoryResist,
-    resists: {
-      kinetic: 25
-    }
-  },
-  "Adv. Focal Shield": {
-    category: categoryResist,
-    resists: {
-      kinetic: 30
-    }
-  },
-  "Exp. Focal Shield": {
-    category: categoryResist,
-    resists: {
-      kinetic: 30
-    }
-  },
-  "Med. Reactive Plating": {
-    category: categoryResist,
-    resists: {
-      kinetic: 30
-    }
-  },
-  "Hvy. Reactive Plating": {
-    category: categoryResist,
-    resists: {
-      kinetic: 40
-    }
-  },
-  "8R-AWN's Armor/TH": {
-    category: categoryResist,
-    resists: {
-      thermal: 90
-    }
-  },
-  "Mak. Thermal Plating": {
-    category: categoryResist,
-    resists: {
-      thermal: 10
-    }
-  },
-  "Thermal Defense Suite": {
-    category: categoryResist,
-    resists: {
-      thermal: 20
-    }
-  },
-  "Reflective Plating": {
-    category: categoryResist,
-    resists: {
-      thermal: 10
-    }
-  },
-  "Med. Reflective Plating": {
-    category: categoryResist,
-    resists: {
-      thermal: 15
-    }
-  },
-  "Thermal Shield": {
-    category: categoryResist,
-    resists: {
-      thermal: 20
-    }
-  },
-  "Imp. Thermal Defense Suite": {
-    category: categoryResist,
-    resists: {
-      thermal: 25
-    }
-  },
-  "Imp. Thermal Shield": {
-    category: categoryResist,
-    resists: {
-      thermal: 25
-    }
-  },
-  "Hvy. Reflective Plating": {
-    category: categoryResist,
-    resists: {
-      thermal: 25
-    }
-  },
-  "Adv. Thermal Defense Suite": {
-    category: categoryResist,
-    resists: {
-      thermal: 30
-    }
-  },
-  "Adv. Thermal Shield": {
-    category: categoryResist,
-    resists: {
-      thermal: 30
-    }
-  },
-  "Exp. Thermal Defense Suite": {
-    category: categoryResist,
-    resists: {
-      thermal: 30
-    }
-  },
-  "Exp. Thermal Shield": {
-    category: categoryResist,
-    resists: {
-      thermal: 30
-    }
-  },
-  "Thermal Barrier": {
-    category: categoryResist,
-    resists: {
-      thermal: 50
-    }
-  },
-  "Beam Splitter": {
-    category: categoryResist,
-    resists: {
-      thermal: 75
-    }
-  },
-  "ME-RLN's Chromatic Screen": {
-    category: categoryResist,
-    resists: {
-      electromagnetic: 20,
-      explosive: 20,
-      impact: 20,
-      kinetic: 20,
-      piercing: 20,
-      slashing: 20,
-      thermal: 20
-    }
-  },
-  "Zio. Shade Carapace": {
-    category: categoryResist,
-    resists: {
-      electromagnetic: 20,
-      explosive: 20,
-      impact: 20,
-      kinetic: 20,
-      piercing: 20,
-      slashing: 20,
-      thermal: 20
-    }
-  },
-  "Zio. Shade Armor": {
-    category: categoryResist,
-    resists: {
-      electromagnetic: 30,
-      explosive: 30,
-      impact: 30,
-      kinetic: 30,
-      piercing: 30,
-      slashing: 30,
-      thermal: 30
-    }
-  },
-  // Ranged avoid, - ranged weapon accuracy
-  "Phase Shifter": {
-    category: categoryRangedAvoid,
-    avoid: 5
-  },
-  "Imp. Phase Shifter": {
-    category: categoryRangedAvoid,
-    avoid: 10
-  },
-  "Adv. Phase Shifter": {
-    category: categoryRangedAvoid,
-    avoid: 15
-  },
-  "Exp. Phase Shifter": {
-    category: categoryRangedAvoid,
-    avoid: 20
-  },
-  // Self damage reduction, damage reduction (val * damage = reduced damage)
-  "1C-UTU's Buckler": {
-    category: categorySelfDamageReduction,
-    reduction: .50
-  },
-  "Powered Armor": {
-    category: categorySelfDamageReduction,
-    reduction: .50
-  },
-  "Imp. Powered Armor": {
-    category: categorySelfDamageReduction,
-    reduction: .50
-  },
-  "Adv. Powered Armor": {
-    category: categorySelfDamageReduction,
-    reduction: .50
-  },
-  "Exp. Powered Armor": {
-    category: categorySelfDamageReduction,
-    reduction: .50
-  },
-  // Part shielding, contains slot and percent of damage blocked
-  "Core Shielding": {
-    category: categoryShielding,
-    slot: "Core",
-    percent: .20
-  },
-  "Imp. Core Shielding": {
-    category: categoryShielding,
-    slot: "Core",
-    percent: .30
-  },
-  "Exp. Core Shielding": {
-    category: categoryShielding,
-    slot: "Core",
-    percent: .40
-  },
-  "Power Shielding": {
-    category: categoryShielding,
-    slot: itemTypes_1.ItemSlot.Power,
-    percent: .33
-  },
-  "Imp. Power Shielding": {
-    category: categoryShielding,
-    slot: itemTypes_1.ItemSlot.Power,
-    percent: .66
-  },
-  "Exp. Power Shielding": {
-    category: categoryShielding,
-    slot: itemTypes_1.ItemSlot.Power,
-    percent: .90
-  },
-  "Propulsion Shielding": {
-    category: categoryShielding,
-    slot: itemTypes_1.ItemSlot.Propulsion,
-    percent: .33
-  },
-  "Imp. Propulsion Shielding": {
-    category: categoryShielding,
-    slot: itemTypes_1.ItemSlot.Propulsion,
-    percent: .66
-  },
-  "Exp. Propulsion Shielding": {
-    category: categoryShielding,
-    slot: itemTypes_1.ItemSlot.Propulsion,
-    percent: .90
-  },
-  "Utility Shielding": {
-    category: categoryShielding,
-    slot: itemTypes_1.ItemSlot.Utility,
-    percent: .33
-  },
-  "Imp. Utility Shielding": {
-    category: categoryShielding,
-    slot: itemTypes_1.ItemSlot.Utility,
-    percent: .66
-  },
-  "Exp. Utility Shielding": {
-    category: categoryShielding,
-    slot: itemTypes_1.ItemSlot.Utility,
-    percent: .90
-  },
-  "Weapon Shielding": {
-    category: categoryShielding,
-    slot: itemTypes_1.ItemSlot.Weapon,
-    percent: .33
-  },
-  "Imp. Weapon Shielding": {
-    category: categoryShielding,
-    slot: itemTypes_1.ItemSlot.Weapon,
-    percent: .66
-  },
-  "Exp. Weapon Shielding": {
-    category: categoryShielding,
-    slot: itemTypes_1.ItemSlot.Weapon,
-    percent: .90
-  },
-  "Zio. Weapon Casing": {
-    category: categoryShielding,
-    slot: itemTypes_1.ItemSlot.Weapon,
-    percent: 1.00
-  }
-}; // Weapon number to base volley time map
-
-exports.volleyTimeMap = {
-  1: 200,
-  2: 300,
-  3: 325,
-  4: 350,
-  5: 375,
-  6: 400
-}; // Applies a final calculated damage value to a bot, splitting into chunks if necessary
-
-function applyDamage(state, botState, damage, critical, armorAnalyzed, coreAnalyzed, disruptChance, spectrum, canOverflow, damageType) {
-  const chunks = []; // Split into chunks each containing originalDamage for other calcs (10)
-
-  if (damageType === itemTypes_1.DamageType.Explosive) {
-    if (critical) {
-      throw "Explosive damage can't be a crit";
-    } // Split explosive damage randomly into 1-3 chunks (8)
-    // EX damage can never crit, ignore armor, disrupt, explicitly 
-    // target core, or have a spectrum
-    // Note: The remainder from the division is explicitly thrown out
-
-
-    const numChunks = common_1.randomInt(1, 3);
-
-    for (let i = 0; i < numChunks; i++) {
-      chunks.push({
-        armorAnalyzed: false,
-        critical: false,
-        damageType: damageType,
-        disruptChance: 0,
-        forceCore: false,
-        originalDamage: Math.trunc(damage / numChunks),
-        realDamage: 0,
-        spectrum: 0
-      });
-    }
-  } else {
-    // Non-EX damage is done in a single chunk unless core analyzer proc (8)
-    if (coreAnalyzed && !botState.immunities.includes(botTypes_1.BotImmunity.Criticals) && !botState.immunities.includes(botTypes_1.BotImmunity.Coring)) {
-      let chunkDamage = Math.trunc(damage / 2);
-      chunks.push({
-        armorAnalyzed: armorAnalyzed,
-        critical: critical,
-        damageType: damageType,
-        disruptChance: disruptChance,
-        forceCore: false,
-        originalDamage: chunkDamage,
-        realDamage: 0,
-        spectrum: spectrum
-      });
-      chunks.push({
-        armorAnalyzed: false,
-        critical: false,
-        damageType: damageType,
-        disruptChance: 0,
-        forceCore: true,
-        originalDamage: chunkDamage,
-        realDamage: 0,
-        spectrum: 0
-      });
-    } else {
-      chunks.push({
-        armorAnalyzed: armorAnalyzed,
-        critical: critical,
-        damageType: damageType,
-        disruptChance: disruptChance,
-        forceCore: false,
-        originalDamage: damage,
-        realDamage: 0,
-        spectrum: spectrum
-      });
-    }
-  } // Apply any additional damage reduction (11)
-
-
-  const part = getDefensiveStatePart(botState.defensiveState.damageReduction);
-  let multiplier = part != undefined ? part.reduction : 1;
-  chunks.forEach(chunk => {
-    chunk.realDamage = Math.trunc(chunk.originalDamage * multiplier);
-  });
-
-  function applyDamageChunk(damage, damageType, critical, isOverflow, forceCore, disruptChance, spectrum, armorAnalyzed) {
-    // Determine hit part (14)
-    const {
-      part,
-      partIndex
-    } = getHitPart(botState, damageType, isOverflow, forceCore, armorAnalyzed); // Handle core hit
-
-    if (part === undefined) {
-      // Try to get shielding
-      const shielding = getShieldingType(botState, "Core"); // Remove crit if immunity or shielding (15)
-
-      if (critical) {
-        critical = !botState.immunities.includes(botTypes_1.BotImmunity.Criticals) && !botState.immunities.includes(botTypes_1.BotImmunity.Coring) && shielding == undefined;
-      }
-
-      if (shielding != undefined) {
-        // Handle core shielding reduction
-        // Note: shielding may absorb more damage than integrity
-        const shieldingDamage = Math.trunc(shielding.reduction * damage);
-        shielding.part.integrity -= shieldingDamage;
-        damage = damage - shieldingDamage;
-      }
-
-      if (critical) {
-        botState.coreIntegrity = 0;
-      } else {
-        botState.coreIntegrity -= damage;
-      } // Apply disruption (18)
-      // Core disruption only has 50% of the usual chance
-
-
-      if (!botState.immunities.includes(botTypes_1.BotImmunity.Disruption) && common_1.randomInt(0, 99) < disruptChance / 2) {
-        botState.coreDisrupted = true;
-      }
-
-      return;
-    } // Try to get shielding
-
-
-    const shielding = getShieldingType(botState, part.def.slot); // Check for crit immunity or shielding (15)
-
-    if (critical) {
-      critical = !botState.immunities.includes(botTypes_1.BotImmunity.Criticals) && shielding == undefined;
-    } // Check for spectrum engine explosion (17)
-    // TODO apply damage
-
-
-    const engineExplosion = part.def.slot === itemTypes_1.ItemSlot.Power && common_1.randomInt(0, 99) < spectrum; // Protection can't get crit, only receives 20% more damage
-
-    if (critical && part.protection) {
-      critical = false;
-      damage = Math.trunc(1.2 * damage);
-    } // Reduce damage for powered armor/siege mode (18)
-    // TODO enemy siege mode
-
-
-    if (part.selfDamageReduction !== 0) {
-      damage = damage * Math.trunc(part.selfDamageReduction);
-    } // Apply disruption (18)
-    // TODO
-
-
-    if (shielding != undefined) {
-      // Handle slot shielding reduction
-      // Note: shielding may absorb more damage than integrity
-      const shieldingDamage = Math.trunc(shielding.reduction * damage);
-      shielding.part.integrity -= shieldingDamage;
-      damage = damage - shieldingDamage;
-    }
-
-    let destroyed = part.integrity <= damage || critical || engineExplosion; // Check for sever            
-
-    if (!destroyed && damageType === itemTypes_1.DamageType.Slashing) {
-      // Sever has a damage / 3 % chance of happening against a
-      // non-destroyed part (23)
-      if (common_1.randomInt(0, 99) < Math.trunc(damage / 3)) {
-        destroyed = true;
-      }
-    }
-
-    if (destroyed) {
-      // Part destroyed, remove part and update bot state
-      botState.parts.splice(partIndex, 1);
-      botState.armorAnalyzedCoverage -= part.armorAnalyzedCoverage;
-      botState.totalCoverage -= part.coverage; // If the part was providing any damage resistances remove them now
-
-      if (part.resistances !== undefined) {
-        Object.keys(part.resistances).forEach(type => {
-          if (type in botState.resistances) {
-            botState.resistances[type] -= part.resistances[type];
-          }
-        });
-      }
-
-      if (part.integrity < damage && !part.protection && canOverflow && !critical) {
-        // Handle overflow damage if excess damage was dealt 
-        // against a non-protection part (19)
-        applyDamageChunk(damage - part.integrity, damageType, false, true, false, 0, 0, false);
-      }
-
-      if (damageType === itemTypes_1.DamageType.Impact) {
-        // Apply 25-150% random corruption to the bot after 
-        // destroying a part (affected by EM resistance) (23)
-        let corruption = common_1.randomInt(25, 150);
-        corruption = calculateResistDamage(botState, corruption, itemTypes_1.DamageType.Electromagnetic);
-        botState.corruption += corruption;
-      }
-
-      part.integrity = 0;
-      updateWeaponsAccuracy(state);
-    } else {
-      // Part not destroyed, just reduce integrity
-      part.integrity -= damage;
-    }
-  } // Apply damage 
-
-
-  chunks.forEach(chunk => {
-    applyDamageChunk(chunk.realDamage, chunk.damageType, chunk.critical, false, chunk.forceCore, chunk.disruptChance, chunk.spectrum, chunk.armorAnalyzed); // Apply corruption (23)
-
-    if (damageType === itemTypes_1.DamageType.Electromagnetic) {
-      // Check for corruption ignore chance
-      const corruptionIgnorePart = getDefensiveStatePart(botState.defensiveState.corruptionIgnore);
-
-      if (corruptionIgnorePart === undefined || common_1.randomInt(0, 99) >= corruptionIgnorePart.chance) {
-        const corruptionPercent = common_1.randomInt(50, 150) / 100;
-        const corruption = chunk.originalDamage * corruptionPercent;
-        botState.corruption += corruption;
-      }
-    }
-  });
-} // Returns a clone of a bot state
-// This is not a deep copy, any fields that can be modified are deep-copied
-// but immutable fields are not.
-
-
-function cloneBotState(botState) {
-  const resistances = {};
-  Object.keys(botState.resistances).forEach(type => resistances[type] = botState.resistances[type]);
-  const newState = {
-    armorAnalyzedCoverage: botState.armorAnalyzedCoverage,
-    coreCoverage: botState.coreCoverage,
-    coreDisrupted: botState.coreDisrupted,
-    coreIntegrity: botState.coreIntegrity,
-    corruption: botState.corruption,
-    def: botState.def,
-    defensiveState: undefined,
-    externalDamageReduction: botState.externalDamageReduction,
-    immunities: botState.immunities,
-    initialCoreIntegrity: botState.initialCoreIntegrity,
-    parts: botState.parts.map(p => {
-      return {
-        armorAnalyzedCoverage: p.armorAnalyzedCoverage,
-        coverage: p.coverage,
-        def: p.def,
-        integrity: p.integrity,
-        protection: p.protection,
-        selfDamageReduction: p.selfDamageReduction
-      };
-    }),
-    regen: botState.regen,
-    resistances: resistances,
-    totalCoverage: botState.totalCoverage
-  };
-  newState.defensiveState = getBotDefensiveState(newState.parts, newState.externalDamageReduction);
-  return newState;
-} // Calculates the resisted damage for a bot given the initial damage value
-
-
-function calculateResistDamage(botState, damage, damageType) {
-  if (damageType in botState.resistances) {
-    return Math.trunc(damage * (1 - botState.resistances[damageType] / 100));
-  }
-
-  return damage;
-}
-
-exports.calculateResistDamage = calculateResistDamage; // Returns a bot's defensive state based on parts, also adds new relevant 
-// properties to parts
-// Adding ad-hoc properties is a little messy but making a bunch of wrapper
-// objects wouldn't really do very much
-
-function getBotDefensiveState(parts, externalDamageReduction) {
-  const state = {
-    antimissile: [],
-    avoid: [],
-    corruptionIgnore: [],
-    damageReduction: [],
-    rangedAvoid: [],
-    shieldings: {
-      "Core": [],
-      "Power": [],
-      "Propulsion": [],
-      "Utility": [],
-      "Weapon": []
-    }
-  };
-  parts.forEach(part => {
-    const name = part.def.name;
-    const specialItem = specialItems[name];
-
-    if (specialItem === undefined) {
-      return;
-    }
-
-    if (specialItem.category === categoryAntimissile) {
-      // Antimissile System-like part
-      state.antimissile.push({
-        chance: specialItem.chance,
-        part: part
-      });
-    } else if (specialItem.category === categoryAvoid) {
-      // Reaction Control System-like part
-      // Leg/hover/flight determination done at accuracy update time
-      state.avoid.push({
-        legs: specialItem.legs,
-        other: specialItem.other,
-        part: part
-      });
-    } else if (specialItem.category === categoryCorruptionIgnore) {
-      // Dynamic Insulation System
-      state.corruptionIgnore.push({
-        chance: specialItem.ignore,
-        part: part
-      });
-    } else if (specialItem.category === categoryDamageReduction) {
-      // Force field-like part
-      state.damageReduction.push({
-        part: part,
-        reduction: specialItem.reduction
-      });
-    } else if (specialItem.category === categoryResist) {
-      // Damage type resist part
-      part.resistances = specialItem.resists;
-    } else if (specialItem.category === categoryRangedAvoid) {
-      // Phase Shifters
-      state.rangedAvoid.push({
-        avoid: specialItem.avoid,
-        part: part
-      });
-    } else if (specialItem.category === categorySelfDamageReduction) {
-      // Powered armor-like part
-      part.selfDamageReduction = specialItem.reduction;
-    } else if (specialItem.category === categoryShielding) {
-      // Core/slot shielding
-      state.shieldings[specialItem.slot].push({
-        part: part,
-        reduction: specialItem.percent
-      });
-    }
-  }); // Sort damage reduction (11)
-
-  if (externalDamageReduction in externalDamageReductionMap) {
-    const reduction = externalDamageReductionMap[externalDamageReduction];
-
-    if (state.damageReduction.length === 0) {
-      // If no other damage reduction no need to sort
-      state.damageReduction.push({
-        reduction: reduction,
-        part: {
-          armorAnalyzedCoverage: 0,
-          coverage: 0,
-          def: undefined,
-          integrity: 1,
-          protection: false,
-          selfDamageReduction: 0
-        }
-      });
-    } else {
-      const existingIndex = damageReductionSortOrder.indexOf(state.damageReduction[0].part.def.name);
-      const newIndex = damageReductionSortOrder.indexOf(externalDamageReduction); // Use sort order to decide to insert before or after
-
-      if (newIndex < existingIndex) {
-        state.damageReduction.unshift({
-          reduction: reduction,
-          part: {
-            armorAnalyzedCoverage: 0,
-            coverage: 0,
-            def: undefined,
-            integrity: 1,
-            protection: false,
-            selfDamageReduction: 0
-          }
-        });
-      } else {
-        state.damageReduction.push({
-          reduction: reduction,
-          part: {
-            armorAnalyzedCoverage: 0,
-            coverage: 0,
-            def: undefined,
-            integrity: 1,
-            protection: false,
-            selfDamageReduction: 0
-          }
-        });
-      }
-    }
-  } // All other parts should technically be sorted as well.
-  // However, in game no bot ever has duplicate mixed-level defenses,
-  // some have multiples of the same level like 2 base weapon shieldings on 
-  // Warbot which, but that doesn't require sorting anyways.
-
-
-  return state;
-}
-
-exports.getBotDefensiveState = getBotDefensiveState; // Tries to get a bot defensive state part from an array
-// Parts will be removed from the array if their integrity has dropped below 0
-
-function getDefensiveStatePart(array) {
-  let part = undefined;
-
-  while (array.length > 0) {
-    if (array[0].part.integrity > 0) {
-      // Found a good part, use it here
-      part = array[0];
-      break;
-    } else {
-      // Found destroyed part, remove from array
-      array.shift();
-    }
-  }
-
-  return part;
-} // Determines the part that was hit by an attack
-
-
-function getHitPart(botState, damageType, isOverflow, forceCore, armorAnalyzed) {
-  let part = undefined;
-  let partIndex;
-
-  if (forceCore) {// Keep part undefined for core hit
-  } else {
-    if (damageType === itemTypes_1.DamageType.Impact) {
-      // Impact damage targets core and all parts with equal probability
-      const coverageHit = common_1.randomInt(0, botState.parts.length);
-
-      if (coverageHit < botState.parts.length) {
-        partIndex = coverageHit;
-        part = botState.parts[partIndex];
-      } else {// Keep part undefined for core hit
-      }
-    } else if (isOverflow) {
-      const protectionParts = botState.parts.filter(p => p.protection && p.coverage > 0);
-
-      if (protectionParts.length > 0) {
-        // Handle overflow damage specially when there's armor,
-        // overflow into a random armor piece based on coverage (20)
-        let coverageHit = common_1.randomInt(0, protectionParts.reduce((prev, part) => prev + part.coverage, 0));
-
-        for (let i = 0; i < protectionParts.length; i++) {
-          coverageHit -= protectionParts[i].coverage;
-
-          if (coverageHit < 0) {
-            part = protectionParts[i];
-            break;
-          } // If it's a core hit we'll run through all parts and exit
-          // the loop with part still equal to undefined
-
-        }
-
-        partIndex = botState.parts.indexOf(part);
-      } // If no protection parts fall into standard coverage behavior
-
-    }
-
-    if (part === undefined) {
-      // Piercing damage gets double core exposure
-      const coreCoverageBonus = damageType === itemTypes_1.DamageType.Piercing ? botState.coreCoverage : 0;
-
-      if (armorAnalyzed) {
-        // Determine part based on reduced armor coverage
-        const totalCoverage = botState.armorAnalyzedCoverage + coreCoverageBonus;
-        let coverageHit = common_1.randomInt(0, totalCoverage - 1);
-
-        for (partIndex = 0; partIndex < botState.parts.length; partIndex++) {
-          // Subtract part's armor analyzed coverage to see if we got a hit
-          coverageHit -= botState.parts[partIndex].armorAnalyzedCoverage;
-
-          if (coverageHit < 0) {
-            part = botState.parts[partIndex];
-            break;
-          } // If it's a core hit we'll run through all parts and exit
-          // the loop with part still equal to undefined
-
-        }
-      } else {
-        // Determine part based on regular coverage
-        const totalCoverage = botState.totalCoverage + coreCoverageBonus;
-        let coverageHit = common_1.randomInt(0, totalCoverage - 1);
-
-        for (partIndex = 0; partIndex < botState.parts.length; partIndex++) {
-          // Subtract part's coverage to see if we got a hit
-          coverageHit -= botState.parts[partIndex].coverage;
-
-          if (coverageHit < 0) {
-            part = botState.parts[partIndex];
-            break;
-          } // If it's a core hit we'll run through all parts and exit
-          // the loop with part still equal to undefined
-
-        }
-      }
-    }
-  }
-
-  if (part === undefined) {
-    partIndex = -1;
-  }
-
-  return {
-    part: part,
-    partIndex: partIndex
-  };
-} // Calculates a weapon's recoil based on the number of treads
-
-
-function getRecoil(weaponDef, numTreads) {
-  let recoil = 0; // Add recoil if siege mode not active
-
-  if (weaponDef.recoil !== undefined) {
-    recoil += weaponDef.recoil;
-    recoil -= numTreads;
-  } // Make sure we don't have negative recoil
-
-
-  return Math.max(recoil, 0);
-}
-
-exports.getRecoil = getRecoil;
-const regenRegex = /Core Regeneration \((\d*)\)/; // Gets the core regen value for a bot, otherwise 0
-
-function getRegen(bot) {
-  const traits = bot.traits;
-
-  for (let i = 0; i < traits.length; i++) {
-    const result = regenRegex.exec(traits[i]);
-
-    if (result != null) {
-      return parseInt(result[1]);
-    }
-  }
-
-  return 0;
-}
-
-exports.getRegen = getRegen; // Gets the volley time given an array of ranged weapons
-
-function getRangedVolleyTime(weapons, cyclerModifier) {
-  let volleyTime;
-
-  if (weapons.length in exports.volleyTimeMap) {
-    volleyTime = exports.volleyTimeMap[weapons.length];
-  } else {
-    // No additional penalty past 6 weapons
-    volleyTime = 400;
-  }
-
-  weapons.forEach(weapon => {
-    // Apply individual delays
-    volleyTime += weapon.delay;
-  });
-  volleyTime *= cyclerModifier; // Min time is capped at 25
-
-  return Math.trunc(Math.max(25, volleyTime));
-}
-
-exports.getRangedVolleyTime = getRangedVolleyTime; // Tries to get a bot's first shielding for a specific slot
-// Parts will be removed from the array if their integrity has dropped below 0
-
-function getShieldingType(botState, slot) {
-  return getDefensiveStatePart(botState.defensiveState.shieldings[slot]);
-}
-
-const simulationEndConditions = {
-  "Kill": function (botState) {
-    return botState.coreIntegrity <= 0 || botState.corruption >= 100;
-  },
-  "Kill or Core Disrupt": function (botState) {
-    return botState.coreIntegrity <= 0 || botState.corruption >= 100 || botState.coreDisrupted;
-  },
-  "Kill or No Power": function (botState) {
-    return botState.coreIntegrity <= 0 || botState.corruption >= 100 || botState.parts.every(part => part.def.slot != itemTypes_1.ItemSlot.Power);
-  },
-  "Kill or No Weapons": function (botState) {
-    return botState.coreIntegrity <= 0 || botState.corruption >= 100 || botState.parts.every(part => part.def.slot != itemTypes_1.ItemSlot.Weapon);
-  },
-  "Architect Tele (80% integrity, 1 weapon, or 1 prop)": function (botState) {
-    return botState.coreIntegrity <= botState.initialCoreIntegrity * 0.8 || botState.parts.filter(part => part.def.slot === itemTypes_1.ItemSlot.Weapon).length === 1 || botState.parts.filter(part => part.def.slot === itemTypes_1.ItemSlot.Propulsion).length === 1;
-  }
-}; // Fully simulates rounds of combat to a kill a bot from an initial state
-
-function simulateCombat(state) {
-  // Clone initial bot state
-  const botState = cloneBotState(state.initialBotState);
-  state.botState = botState;
-  const offensiveState = state.offensiveState;
-  let volleys = 0;
-  let oldTus = 0;
-  state.tus = 0; // Update initial accuracy
-
-  updateWeaponsAccuracy(state);
-  const endCondition = simulationEndConditions[state.endCondition]; // Update initial sneak attack state
-
-  offensiveState.sneakAttack = offensiveState.sneakAttackStrategy === "All" || offensiveState.sneakAttackStrategy === "First Only"; // Update initial momentum
-
-  offensiveState.momentum.current = offensiveState.momentum.bonus + offensiveState.momentum.initial;
-
-  while (!endCondition(botState)) {
-    // Apply core regen
-    const lastCompletedTurns = Math.trunc(oldTus / 100);
-    const newCompletedTurns = Math.trunc(state.tus / 100);
-    const regenIntegrity = botState.regen * (newCompletedTurns - lastCompletedTurns);
-    botState.coreIntegrity = Math.min(botState.initialCoreIntegrity, botState.coreIntegrity + regenIntegrity); // Process each volley
-
-    volleys += 1;
-    let volleyTime = offensiveState.volleyTime;
-
-    if (offensiveState.melee) {
-      // Always do primary attack
-      simulateWeapon(state, state.weapons[0]); // Handle followups chances
-
-      for (let i = 1; i < state.weapons.length; i++) {
-        if (common_1.randomInt(0, 99) < offensiveState.followupChances[i - 1]) {
-          simulateWeapon(state, state.weapons[i]); // Add followup delay, 50% of normal
-
-          volleyTime += 0.5 * state.weapons[i].delay;
-        }
-      } // Apply volley modifier (actuators) here since the total time
-      // can't be known ahead of time
-
-
-      volleyTime *= offensiveState.volleyTimeModifier;
-
-      if (volleys === 1) {
-        // Disable sneak attack if active only for the first turn
-        if (offensiveState.sneakAttackStrategy === "First Only") {
-          offensiveState.sneakAttack = false;
-        } // Remove initial momentum
-
-
-        offensiveState.momentum.current = offensiveState.momentum.bonus;
-      }
-    } else {
-      state.weapons.forEach(weapon => simulateWeapon(state, weapon));
-    }
-
-    if (volleys >= exports.maxVolleys) {
-      // Exceeded max volleys and combat will likely never complete
-      // Just bail here
-      return false;
-    } // Update TUs and time based changes
-
-
-    oldTus = state.tus;
-    state.tus += volleyTime; // Update accuracy when crossing siege mode activation
-
-    if (!offensiveState.melee && oldTus < offensiveState.siegeBonus.tus && state.tus > offensiveState.siegeBonus.tus) {
-      updateWeaponsAccuracy(state);
-    }
-  } // Update kill dictionaries
-
-
-  if (volleys in state.killVolleys) {
-    state.killVolleys[volleys] += 1;
-  } else {
-    state.killVolleys[volleys] = 1;
-  }
-
-  if (state.tus in state.killTus) {
-    state.killTus[state.tus] += 1;
-  } else {
-    state.killTus[state.tus] = 1;
-  }
-
-  return true;
-}
-
-exports.simulateCombat = simulateCombat; // Simulates 1 weapon's damage in a volley
-
-function simulateWeapon(state, weapon) {
-  const botState = state.botState;
-  const offensiveState = state.offensiveState;
-
-  for (let i = 0; i < weapon.numProjectiles; i++) {
-    // Check if the attack was a sneak attack or was a hit.
-    // Technically sneak attacks can miss, but not under any realistic
-    // scenario I could find. Sneak attacks force a base accuracy of 120%,
-    // seemingly overriding other penalties like size or defensive 
-    // utilities like Reaction Control Systems. The most it seems to 
-    // take into account is -targeting, the lowest of which
-    // (CR-A16's Pointy Stick) only has -20%, making this always a
-    // guaranteed hit.
-    let hit = offensiveState.melee && offensiveState.sneakAttack || common_1.randomInt(0, 99) < weapon.accuracy;
-
-    if (hit && weapon.isMissile) {
-      // Check for an antimissile intercept
-      const part = getDefensiveStatePart(botState.defensiveState.antimissile);
-
-      if (part != undefined) {
-        const intercept = part.chance; // Check once per tile
-        // Note: even though the utilities have a range of 3 there are
-        // still 4 attempts at an intercept because the projectile can
-        // be intercepted on the same tile as the bot is currently on
-        // before the damage is applied.
-        // See below, @ is cogmind, i is intercept bot, 
-        // . is empty space, and x is intercept roll
-        // @ . . . i
-        // @ x . . i
-        // @ . x . i
-        // @ . . x i
-        // @ . . . x
-
-        const numChanges = Math.min(4, offensiveState.distance);
-
-        for (let i = 0; i < numChanges; i++) {
-          if (common_1.randomInt(0, 99) < intercept) {
-            hit = false;
-            break;
-          }
-        }
-      }
-    }
-
-    if (!hit) {
-      continue;
-    }
-
-    if (weapon.damageType != undefined) {
-      // Calculate base damage, then apply overloads, momentum,
-      // and sneak attacks (2)
-      let damage = common_1.randomInt(weapon.damageMin, weapon.damageMax); // Overloading guns TODO
-      // Apply momentum bonus
-      // ([momentum] * [speed%] / 1200) * 40)
-
-      if (offensiveState.melee && offensiveState.momentum.current > 0) {
-        const speedPercent = 100 / offensiveState.speed * 100;
-        let momentumMultiplier = offensiveState.momentum.current * speedPercent / 1200 * 40; // Cap at 1-40
-
-        momentumMultiplier = Math.trunc(momentumMultiplier);
-        momentumMultiplier = Math.max(1, momentumMultiplier);
-        momentumMultiplier = Math.min(40, momentumMultiplier);
-
-        if (weapon.damageType === itemTypes_1.DamageType.Piercing) {
-          // Piercing gets double bonus (not double cap)
-          momentumMultiplier *= 2;
-        }
-
-        momentumMultiplier = momentumMultiplier / 100 + 1;
-        damage = Math.trunc(momentumMultiplier * damage);
-      } // Apply double damage sneak attack bonus
-
-
-      if (offensiveState.melee && offensiveState.sneakAttack) {
-        damage *= 2;
-      } // Add analysis (3)
-
-
-      if (offensiveState.analysis) {
-        damage = Math.trunc(1.1 * damage);
-      } // Add accelerator (5)
-
-
-      if (weapon.accelerated) {
-        damage = Math.trunc(offensiveState.chargerBonus * damage);
-      } // Apply resistances (6)
-
-
-      damage = calculateResistDamage(botState, damage, weapon.damageType); // Check for armor integrity analyzer
-
-      const armorAnalyzed = common_1.randomInt(0, 99) < offensiveState.armorAnalyzerChance; // Check for core analyzer (8)
-
-      const coreAnalyzed = common_1.randomInt(0, 99) < offensiveState.coreAnalyzerChance; // Check for crit (9)
-
-      const critical = common_1.randomInt(0, 99) < weapon.critical;
-
-      if (damage > 0) {
-        applyDamage(state, botState, damage, critical, armorAnalyzed, coreAnalyzed, weapon.disruption, weapon.spectrum, weapon.overflow, weapon.damageType);
-      }
-    }
-
-    if (weapon.explosionType != undefined) {
-      // Apply explosion damage (2)
-      let damage = common_1.randomInt(weapon.explosionMin, weapon.explosionMax); // Apply resistances (6)
-
-      damage = calculateResistDamage(botState, damage, weapon.explosionType);
-
-      if (damage > 0) {
-        applyDamage(state, botState, damage, false, false, false, weapon.disruption, weapon.explosionSpectrum, weapon.overflow, weapon.explosionType);
-      }
-    }
-  }
-} // Updates all calculated weapon accuracies
-
-
-function updateWeaponsAccuracy(state) {
-  const offensiveState = state.offensiveState;
-  const botState = state.botState;
-  let perWeaponBonus = 0; // Flying/hovering enemy penalty
-  // TODO handle bots becoming overweight
-
-  const botDef = botState.def;
-  const movement = botDef.movement;
-
-  if (movement.includes("Hovering") || movement.includes("Flying")) {
-    perWeaponBonus -= 10;
-  } // Subtract always avoid util (reaction control system)
-
-
-  const avoidPart = getDefensiveStatePart(botState.defensiveState.avoid);
-
-  if (avoidPart != undefined) {
-    if (movement.includes("Walking")) {
-      perWeaponBonus -= avoidPart.legs;
-    } else {
-      // TODO - doesn't matter now but should make sure hover/flight is active here
-      perWeaponBonus -= avoidPart.other;
-    }
-  }
-
-  if (offensiveState.analysis) {
-    perWeaponBonus += 5;
-  }
-
-  let siegeBonus = 0;
-
-  if (offensiveState.melee) {
-    // Add melee analysis bonuses
-    for (let i = 0; i < meleeAnalysisAccuracy.length; i++) {
-      perWeaponBonus += offensiveState.meleeAnalysis[i] * meleeAnalysisAccuracy[i];
-    }
-  } else {
-    // Add (low) distance bonus
-    perWeaponBonus += offensiveState.distance < 6 ? (6 - offensiveState.distance) * 3 : 0; // Add siege bonus
-
-    const siege = offensiveState.siegeBonus;
-
-    if (state.tus >= siege.tus) {
-      siegeBonus = siege.bonus;
-    }
-
-    perWeaponBonus += siegeBonus; // Subtract ranged avoid util (phase shifter)
-
-    const rangedAvoidPart = getDefensiveStatePart(botState.defensiveState.rangedAvoid);
-
-    if (rangedAvoidPart != undefined) {
-      perWeaponBonus -= rangedAvoidPart.avoid;
-    }
-  }
-
-  state.weapons.forEach(weapon => {
-    if (weapon.def.waypoints !== undefined) {
-      // Guided weapons always have 100% accuracy
-      weapon.accuracy = 100;
-      return;
-    }
-
-    let accuracy = weapon.baseAccuracy + perWeaponBonus;
-
-    if (!offensiveState.melee && siegeBonus === 0) {
-      // Subtract recoil if siege mode inactive
-      accuracy -= offensiveState.recoil - getRecoil(weapon.def, offensiveState.numTreads);
-    } // Cap accuracy
-
-
-    let max = offensiveState.melee ? maxRangedAccuracy : maxMeleeAccuracy;
-    weapon.accuracy = Math.min(max, Math.max(accuracy, minAccuracy));
-  });
-}
-},{"./botTypes":"ts/botTypes.ts","./common":"ts/common.ts","./itemTypes":"ts/itemTypes.ts"}],"../node_modules/process/browser.js":[function(require,module,exports) {
+},{"../json/bots.json":"json/bots.json","../json/categories.json":"json/categories.json","../json/items.json":"json/items.json","./itemTypes":"ts/itemTypes.ts"}],"../node_modules/process/browser.js":[function(require,module,exports) {
 
 // shim for using process in browser
 var process = module.exports = {}; // cached from whatever global is present so that test runners that stub it
@@ -38839,7 +37406,1602 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-},{"process":"../node_modules/process/browser.js"}],"../node_modules/popper.js/dist/esm/popper.js":[function(require,module,exports) {
+},{"process":"../node_modules/process/browser.js"}],"ts/commonJquery.ts":[function(require,module,exports) {
+"use strict"; // Common Jquery related code
+
+var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = this && this.__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = this && this.__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.resetButtonGroup = exports.getSpoilersState = exports.getSelectedButtonId = exports.enableBotInfoItemPopovers = void 0;
+
+const common_1 = require("./common");
+
+const jQuery = __importStar(require("jquery"));
+
+const $ = jQuery.noConflict();
+const nameRegex = /\[([\w. '"\-/]*) \(\d/;
+const optionNameRegex = /([\w. '"\-/]*) \(\d/; // Enables nested bot info popovers given a selector to the root bot popover
+
+function enableBotInfoItemPopovers(selector) {
+  selector.on("shown.bs.popover", e => {
+    // Set up popovers for items on bots
+    const body = $(`#${$(e.target).attr("aria-describedby")}`).children(".popover-body");
+    const items = body.find(".popover-part");
+    items.each((_, element) => {
+      const selector = $(element);
+      const result = nameRegex.exec(selector.text());
+
+      if (result === null || !(result[1] in common_1.itemData)) {
+        // Not a valid item
+        return;
+      } // Set up popover attributes
+
+
+      const weapon = common_1.getItem(result[1]);
+      selector.data("html", true);
+      selector.data("content", common_1.createItemDataContent(weapon));
+      selector.data("toggle", "popover");
+      selector.addClass("bot-popover-item");
+      selector.popover(); // Show/hide surrounding brackets to indicate selection
+
+      selector.on("mouseenter", () => {
+        selector.children("span").removeClass("bot-popover-item-bracket-invisible");
+      });
+      selector.on("mouseleave", () => {
+        selector.children("span").addClass("bot-popover-item-bracket-invisible");
+      });
+      selector.data("toggle", "popover");
+    });
+    const optionItems = body.find(".popover-option").parent();
+    optionItems.each((_, element) => {
+      const selector = $(element);
+      const result = optionNameRegex.exec(selector.find("span:nth-child(3)").text());
+
+      if (result === null || !(result[1] in common_1.itemData)) {
+        // Not a valid item
+        return;
+      } // Set up popover attributes
+
+
+      const weapon = common_1.getItem(result[1]);
+      selector.data("html", true);
+      selector.data("content", common_1.createItemDataContent(weapon));
+      selector.data("toggle", "popover");
+      selector.addClass("bot-popover-item");
+      selector.popover(); // Show/hide surrounding brackets to indicate selection
+
+      selector.on("mouseenter", () => {
+        selector.children(".bot-popover-item-bracket").removeClass("bot-popover-item-bracket-invisible");
+      });
+      selector.on("mouseleave", () => {
+        selector.children(".bot-popover-item-bracket").addClass("bot-popover-item-bracket-invisible");
+      });
+      selector.data("toggle", "popover");
+    });
+  });
+  selector.on("hide.bs.popover", e => {
+    // Dispose nested popovers when the base popover is closed
+    const body = $(`#${$(e.target).attr("aria-describedby")}`).children(".popover-body");
+    const items = body.find(".bot-popover-item");
+    items.popover("dispose");
+  });
+}
+
+exports.enableBotInfoItemPopovers = enableBotInfoItemPopovers; // Gets the ID of the selected button in a button group
+
+function getSelectedButtonId(selector) {
+  return selector.children(".active").attr("id");
+}
+
+exports.getSelectedButtonId = getSelectedButtonId; // Gets the stored spoilers state
+
+function getSpoilersState() {
+  let value = common_1.valueOrDefault(window.localStorage.getItem("spoilers"), "None");
+
+  if (typeof value != "string" || value != "None" && value != "Spoilers" && value != "Redacted") {
+    value = "None";
+  }
+
+  return value;
+}
+
+exports.getSpoilersState = getSpoilersState; // Clears a button group's state and sets the first item to be active
+
+function resetButtonGroup(group) {
+  group.children().removeClass("active");
+  group.children("label:first-of-type").addClass("active");
+}
+
+exports.resetButtonGroup = resetButtonGroup;
+},{"./common":"ts/common.ts","jquery":"../node_modules/jquery/dist/jquery.js"}],"ts/botTypes.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.BotSize = exports.BotImmunity = exports.BotCategory = void 0;
+var BotCategory;
+
+(function (BotCategory) {
+  BotCategory["Alien"] = "Alien";
+  BotCategory["Architect"] = "Architect";
+  BotCategory["Derelict"] = "Derelict";
+  BotCategory["Drone"] = "Drone";
+  BotCategory["Exiles"] = "Exiles";
+  BotCategory["Prototype"] = "Prototype";
+  BotCategory["Redacted"] = "Redacted";
+  BotCategory["Spoilers"] = "Spoilers";
+  BotCategory["OB10"] = "0b10";
+  BotCategory["Warlord"] = "Warlord";
+  BotCategory["Zhirov"] = "Zhirov";
+  BotCategory["Zionite"] = "Zionite";
+})(BotCategory = exports.BotCategory || (exports.BotCategory = {}));
+
+;
+var BotImmunity;
+
+(function (BotImmunity) {
+  BotImmunity["Coring"] = "Coring";
+  BotImmunity["Criticals"] = "Criticals";
+  BotImmunity["Dismemberment"] = "Dismemberment";
+  BotImmunity["Disruption"] = "Disruption";
+  BotImmunity["Hacking"] = "Hacking";
+  BotImmunity["Jamming"] = "Jamming";
+  BotImmunity["Meltdown"] = "Meltdown";
+})(BotImmunity = exports.BotImmunity || (exports.BotImmunity = {}));
+
+;
+var BotSize;
+
+(function (BotSize) {
+  BotSize["Huge"] = "Huge";
+  BotSize["Large"] = "Large";
+  BotSize["Medium"] = "Medium";
+  BotSize["Small"] = "Small";
+  BotSize["Tiny"] = "Tiny";
+})(BotSize = exports.BotSize || (exports.BotSize = {}));
+
+;
+},{}],"ts/simulatorCalcs.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.simulateCombat = exports.getRangedVolleyTime = exports.getRegen = exports.getRecoil = exports.getBotDefensiveState = exports.calculateResistDamage = exports.volleyTimeMap = exports.maxVolleys = void 0; // Battle simulation calculation functions/constants
+
+const botTypes_1 = require("./botTypes");
+
+const common_1 = require("./common");
+
+const itemTypes_1 = require("./itemTypes");
+
+const minAccuracy = 10;
+const maxRangedAccuracy = 95;
+const maxMeleeAccuracy = 100;
+exports.maxVolleys = 100000; // Array of damage reducing parts to sort
+// 11. Apply the first and only first defense applicable from the 
+// following list: phase wall, 75% personal shield (VFP etc), 
+// Force Field, Shield Generator, stasis bubble, active Stasis Trap,
+// Remote Shield, 50% remote shield (Energy Mantle etc.), Hardlight Generator.
+
+const damageReductionSortOrder = ["Phase Wall", "Vortex Field Projector", "7V-RTL'S Ultimate Field", "Force Field", "Imp. Force Field", "Adv. Force Field", "Exp. Force Field", "Shield Generator", "Imp. Shield Generator", "Adv. Shield Generator", "Exp. Shield Generator", "Stasis Bubble", "Stasis Trap", "Remote Shield", "Imp. Remote Shield", "Remote Force Field", "Imp. Remote Force Field", "Energy Mantle", "Imp. Energy Mantle", "AEGIS Remote Shield"];
+const externalDamageReductionMap = {
+  "Remote Shield": 0.75,
+  "Stasis Trap": 0.75,
+  "Phase Wall": 0.5,
+  "Remote Force Field": 0.5,
+  "Stasis Bubble": 0.5
+}; // Array of melee analysis accuracy increases
+
+const meleeAnalysisAccuracy = [5, 6, 8, 12];
+const categoryAntimissile = 0;
+const categoryAvoid = 1;
+const categoryCorruptionIgnore = 2;
+const categoryDamageReduction = 3;
+const categoryResist = 4;
+const categoryRangedAvoid = 5;
+const categorySelfDamageReduction = 6;
+const categoryShielding = 7;
+const specialItems = {
+  // Antimissile, chance to shoot down launcher projectiles per tile
+  "Point Defense System": {
+    category: categoryAntimissile,
+    chance: 8
+  },
+  "Point Defense Array": {
+    category: categoryAntimissile,
+    chance: 16
+  },
+  "Antimissile System": {
+    category: categoryAntimissile,
+    chance: 24
+  },
+  // Avoid, - all weapon accuracy
+  "Maneuvering Thrusters": {
+    category: categoryAvoid,
+    legs: 3,
+    other: 6
+  },
+  "Imp. Maneuvering Thrusters": {
+    category: categoryAvoid,
+    legs: 5,
+    other: 10
+  },
+  "Reaction Control System": {
+    category: categoryAvoid,
+    legs: 6,
+    other: 12
+  },
+  "Adv. Reaction Control System": {
+    category: categoryAvoid,
+    legs: 7,
+    other: 14
+  },
+  // Corruption ignore, % of ignoring corruption addition
+  "Dynamic Insulation System": {
+    category: categoryCorruptionIgnore,
+    ignore: 50
+  },
+  "Imp. Dynamic Insulation System": {
+    category: categoryCorruptionIgnore,
+    ignore: 67
+  },
+  "Adv. Dynamic Insulation System": {
+    category: categoryCorruptionIgnore,
+    ignore: 75
+  },
+  // Damage reduction, (val * damage = reduced damage)
+  "Adv. Shield Generator": {
+    category: categoryDamageReduction,
+    reduction: .75
+  },
+  "Exp. Shield Generator": {
+    category: categoryDamageReduction,
+    reduction: .75
+  },
+  "Imp. Remote Shield": {
+    category: categoryDamageReduction,
+    reduction: .75
+  },
+  "Imp. Shield Generator": {
+    category: categoryDamageReduction,
+    reduction: .75
+  },
+  "Remote Shield": {
+    category: categoryDamageReduction,
+    reduction: .75
+  },
+  "Shield Generator": {
+    category: categoryDamageReduction,
+    reduction: .75
+  },
+  "AEGIS Remote Shield": {
+    category: categoryDamageReduction,
+    reduction: .50
+  },
+  "Adv. Force Field": {
+    category: categoryDamageReduction,
+    reduction: .50
+  },
+  "Exp. Force Field": {
+    category: categoryDamageReduction,
+    reduction: .50
+  },
+  "Energy Mantle": {
+    category: categoryDamageReduction,
+    reduction: .50
+  },
+  "Force Field": {
+    category: categoryDamageReduction,
+    reduction: .50
+  },
+  "Imp. Energy Mantle": {
+    category: categoryDamageReduction,
+    reduction: .50
+  },
+  "Imp. Force Field": {
+    category: categoryDamageReduction,
+    reduction: .50
+  },
+  "Imp. Remote Force Field": {
+    category: categoryDamageReduction,
+    reduction: .50
+  },
+  "Remote Force Field": {
+    category: categoryDamageReduction,
+    reduction: .50
+  },
+  "7V-RTL's Ultimate Field": {
+    category: categoryDamageReduction,
+    reduction: .25
+  },
+  "Vortex Field Projector": {
+    category: categoryDamageReduction,
+    reduction: .25
+  },
+  // Resist, % of damage type resisted
+  "Insulated Plating": {
+    category: categoryResist,
+    resists: {
+      electromagnetic: 15
+    }
+  },
+  "Med. Insulated Plating": {
+    category: categoryResist,
+    resists: {
+      electromagnetic: 20
+    }
+  },
+  "EM Shield": {
+    category: categoryResist,
+    resists: {
+      electromagnetic: 25
+    }
+  },
+  "Hvy. Insulated Plating": {
+    category: categoryResist,
+    resists: {
+      electromagnetic: 30
+    }
+  },
+  "EM Disruption": {
+    category: categoryResist,
+    resists: {
+      electromagnetic: 50
+    }
+  },
+  "EM Dispersion": {
+    category: categoryResist,
+    resists: {
+      electromagnetic: 75
+    }
+  },
+  "Damper Plating": {
+    category: categoryResist,
+    resists: {
+      electromagnetic: 90
+    }
+  },
+  "8R-AWN's Armor/EX": {
+    category: categoryResist,
+    resists: {
+      explosive: 90
+    }
+  },
+  "Shock Absorption System": {
+    category: categoryResist,
+    resists: {
+      explosive: 25
+    }
+  },
+  "Imp. Shock Absorption System": {
+    category: categoryResist,
+    resists: {
+      explosive: 50
+    }
+  },
+  "Exp. Shock Absorption System": {
+    category: categoryResist,
+    resists: {
+      explosive: 75
+    }
+  },
+  "Mak. Kinetic Plating": {
+    category: categoryResist,
+    resists: {
+      kinetic: 20
+    }
+  },
+  "Focal Shield": {
+    category: categoryResist,
+    resists: {
+      kinetic: 20
+    }
+  },
+  "Reactive Plating": {
+    category: categoryResist,
+    resists: {
+      kinetic: 20
+    }
+  },
+  "Imp. Focal Shield": {
+    category: categoryResist,
+    resists: {
+      kinetic: 25
+    }
+  },
+  "Adv. Focal Shield": {
+    category: categoryResist,
+    resists: {
+      kinetic: 30
+    }
+  },
+  "Exp. Focal Shield": {
+    category: categoryResist,
+    resists: {
+      kinetic: 30
+    }
+  },
+  "Med. Reactive Plating": {
+    category: categoryResist,
+    resists: {
+      kinetic: 30
+    }
+  },
+  "Hvy. Reactive Plating": {
+    category: categoryResist,
+    resists: {
+      kinetic: 40
+    }
+  },
+  "8R-AWN's Armor/TH": {
+    category: categoryResist,
+    resists: {
+      thermal: 90
+    }
+  },
+  "Mak. Thermal Plating": {
+    category: categoryResist,
+    resists: {
+      thermal: 10
+    }
+  },
+  "Thermal Defense Suite": {
+    category: categoryResist,
+    resists: {
+      thermal: 20
+    }
+  },
+  "Reflective Plating": {
+    category: categoryResist,
+    resists: {
+      thermal: 10
+    }
+  },
+  "Med. Reflective Plating": {
+    category: categoryResist,
+    resists: {
+      thermal: 15
+    }
+  },
+  "Thermal Shield": {
+    category: categoryResist,
+    resists: {
+      thermal: 20
+    }
+  },
+  "Imp. Thermal Defense Suite": {
+    category: categoryResist,
+    resists: {
+      thermal: 25
+    }
+  },
+  "Imp. Thermal Shield": {
+    category: categoryResist,
+    resists: {
+      thermal: 25
+    }
+  },
+  "Hvy. Reflective Plating": {
+    category: categoryResist,
+    resists: {
+      thermal: 25
+    }
+  },
+  "Adv. Thermal Defense Suite": {
+    category: categoryResist,
+    resists: {
+      thermal: 30
+    }
+  },
+  "Adv. Thermal Shield": {
+    category: categoryResist,
+    resists: {
+      thermal: 30
+    }
+  },
+  "Exp. Thermal Defense Suite": {
+    category: categoryResist,
+    resists: {
+      thermal: 30
+    }
+  },
+  "Exp. Thermal Shield": {
+    category: categoryResist,
+    resists: {
+      thermal: 30
+    }
+  },
+  "Thermal Barrier": {
+    category: categoryResist,
+    resists: {
+      thermal: 50
+    }
+  },
+  "Beam Splitter": {
+    category: categoryResist,
+    resists: {
+      thermal: 75
+    }
+  },
+  "ME-RLN's Chromatic Screen": {
+    category: categoryResist,
+    resists: {
+      electromagnetic: 20,
+      explosive: 20,
+      impact: 20,
+      kinetic: 20,
+      piercing: 20,
+      slashing: 20,
+      thermal: 20
+    }
+  },
+  "Zio. Shade Carapace": {
+    category: categoryResist,
+    resists: {
+      electromagnetic: 20,
+      explosive: 20,
+      impact: 20,
+      kinetic: 20,
+      piercing: 20,
+      slashing: 20,
+      thermal: 20
+    }
+  },
+  "Zio. Shade Armor": {
+    category: categoryResist,
+    resists: {
+      electromagnetic: 30,
+      explosive: 30,
+      impact: 30,
+      kinetic: 30,
+      piercing: 30,
+      slashing: 30,
+      thermal: 30
+    }
+  },
+  // Ranged avoid, - ranged weapon accuracy
+  "Phase Shifter": {
+    category: categoryRangedAvoid,
+    avoid: 5
+  },
+  "Imp. Phase Shifter": {
+    category: categoryRangedAvoid,
+    avoid: 10
+  },
+  "Adv. Phase Shifter": {
+    category: categoryRangedAvoid,
+    avoid: 15
+  },
+  "Exp. Phase Shifter": {
+    category: categoryRangedAvoid,
+    avoid: 20
+  },
+  // Self damage reduction, damage reduction (val * damage = reduced damage)
+  "1C-UTU's Buckler": {
+    category: categorySelfDamageReduction,
+    reduction: .50
+  },
+  "Powered Armor": {
+    category: categorySelfDamageReduction,
+    reduction: .50
+  },
+  "Imp. Powered Armor": {
+    category: categorySelfDamageReduction,
+    reduction: .50
+  },
+  "Adv. Powered Armor": {
+    category: categorySelfDamageReduction,
+    reduction: .50
+  },
+  "Exp. Powered Armor": {
+    category: categorySelfDamageReduction,
+    reduction: .50
+  },
+  // Part shielding, contains slot and percent of damage blocked
+  "Core Shielding": {
+    category: categoryShielding,
+    slot: "Core",
+    percent: .20
+  },
+  "Imp. Core Shielding": {
+    category: categoryShielding,
+    slot: "Core",
+    percent: .30
+  },
+  "Exp. Core Shielding": {
+    category: categoryShielding,
+    slot: "Core",
+    percent: .40
+  },
+  "Power Shielding": {
+    category: categoryShielding,
+    slot: itemTypes_1.ItemSlot.Power,
+    percent: .33
+  },
+  "Imp. Power Shielding": {
+    category: categoryShielding,
+    slot: itemTypes_1.ItemSlot.Power,
+    percent: .66
+  },
+  "Exp. Power Shielding": {
+    category: categoryShielding,
+    slot: itemTypes_1.ItemSlot.Power,
+    percent: .90
+  },
+  "Propulsion Shielding": {
+    category: categoryShielding,
+    slot: itemTypes_1.ItemSlot.Propulsion,
+    percent: .33
+  },
+  "Imp. Propulsion Shielding": {
+    category: categoryShielding,
+    slot: itemTypes_1.ItemSlot.Propulsion,
+    percent: .66
+  },
+  "Exp. Propulsion Shielding": {
+    category: categoryShielding,
+    slot: itemTypes_1.ItemSlot.Propulsion,
+    percent: .90
+  },
+  "Utility Shielding": {
+    category: categoryShielding,
+    slot: itemTypes_1.ItemSlot.Utility,
+    percent: .33
+  },
+  "Imp. Utility Shielding": {
+    category: categoryShielding,
+    slot: itemTypes_1.ItemSlot.Utility,
+    percent: .66
+  },
+  "Exp. Utility Shielding": {
+    category: categoryShielding,
+    slot: itemTypes_1.ItemSlot.Utility,
+    percent: .90
+  },
+  "Weapon Shielding": {
+    category: categoryShielding,
+    slot: itemTypes_1.ItemSlot.Weapon,
+    percent: .33
+  },
+  "Imp. Weapon Shielding": {
+    category: categoryShielding,
+    slot: itemTypes_1.ItemSlot.Weapon,
+    percent: .66
+  },
+  "Exp. Weapon Shielding": {
+    category: categoryShielding,
+    slot: itemTypes_1.ItemSlot.Weapon,
+    percent: .90
+  },
+  "Zio. Weapon Casing": {
+    category: categoryShielding,
+    slot: itemTypes_1.ItemSlot.Weapon,
+    percent: 1.00
+  }
+}; // Weapon number to base volley time map
+
+exports.volleyTimeMap = {
+  1: 200,
+  2: 300,
+  3: 325,
+  4: 350,
+  5: 375,
+  6: 400
+}; // Applies a final calculated damage value to a bot, splitting into chunks if necessary
+
+function applyDamage(state, botState, damage, critical, armorAnalyzed, coreAnalyzed, disruptChance, spectrum, canOverflow, damageType) {
+  const chunks = []; // Split into chunks each containing originalDamage for other calcs (10)
+
+  if (damageType === itemTypes_1.DamageType.Explosive) {
+    if (critical) {
+      throw "Explosive damage can't be a crit";
+    } // Split explosive damage randomly into 1-3 chunks (8)
+    // EX damage can never crit, ignore armor, disrupt, explicitly 
+    // target core, or have a spectrum
+    // Note: The remainder from the division is explicitly thrown out
+
+
+    const numChunks = common_1.randomInt(1, 3);
+
+    for (let i = 0; i < numChunks; i++) {
+      chunks.push({
+        armorAnalyzed: false,
+        critical: false,
+        damageType: damageType,
+        disruptChance: 0,
+        forceCore: false,
+        originalDamage: Math.trunc(damage / numChunks),
+        realDamage: 0,
+        spectrum: 0
+      });
+    }
+  } else {
+    // Non-EX damage is done in a single chunk unless core analyzer proc (8)
+    if (coreAnalyzed && !botState.immunities.includes(botTypes_1.BotImmunity.Criticals) && !botState.immunities.includes(botTypes_1.BotImmunity.Coring)) {
+      let chunkDamage = Math.trunc(damage / 2);
+      chunks.push({
+        armorAnalyzed: armorAnalyzed,
+        critical: critical,
+        damageType: damageType,
+        disruptChance: disruptChance,
+        forceCore: false,
+        originalDamage: chunkDamage,
+        realDamage: 0,
+        spectrum: spectrum
+      });
+      chunks.push({
+        armorAnalyzed: false,
+        critical: false,
+        damageType: damageType,
+        disruptChance: 0,
+        forceCore: true,
+        originalDamage: chunkDamage,
+        realDamage: 0,
+        spectrum: 0
+      });
+    } else {
+      chunks.push({
+        armorAnalyzed: armorAnalyzed,
+        critical: critical,
+        damageType: damageType,
+        disruptChance: disruptChance,
+        forceCore: false,
+        originalDamage: damage,
+        realDamage: 0,
+        spectrum: spectrum
+      });
+    }
+  } // Apply any additional damage reduction (11)
+
+
+  const part = getDefensiveStatePart(botState.defensiveState.damageReduction);
+  let multiplier = part != undefined ? part.reduction : 1;
+  chunks.forEach(chunk => {
+    chunk.realDamage = Math.trunc(chunk.originalDamage * multiplier);
+  });
+
+  function applyDamageChunk(damage, damageType, critical, isOverflow, forceCore, disruptChance, spectrum, armorAnalyzed) {
+    // Determine hit part (14)
+    const {
+      part,
+      partIndex
+    } = getHitPart(botState, damageType, isOverflow, forceCore, armorAnalyzed); // Handle core hit
+
+    if (part === undefined) {
+      // Try to get shielding
+      const shielding = getShieldingType(botState, "Core"); // Remove crit if immunity or shielding (15)
+
+      if (critical) {
+        critical = !botState.immunities.includes(botTypes_1.BotImmunity.Criticals) && !botState.immunities.includes(botTypes_1.BotImmunity.Coring) && shielding == undefined;
+      }
+
+      if (shielding != undefined) {
+        // Handle core shielding reduction
+        // Note: shielding may absorb more damage than integrity
+        const shieldingDamage = Math.trunc(shielding.reduction * damage);
+        shielding.part.integrity -= shieldingDamage;
+        damage = damage - shieldingDamage;
+      }
+
+      if (critical) {
+        botState.coreIntegrity = 0;
+      } else {
+        botState.coreIntegrity -= damage;
+      } // Apply disruption (18)
+      // Core disruption only has 50% of the usual chance
+
+
+      if (!botState.immunities.includes(botTypes_1.BotImmunity.Disruption) && common_1.randomInt(0, 99) < disruptChance / 2) {
+        botState.coreDisrupted = true;
+      }
+
+      return;
+    } // Try to get shielding
+
+
+    const shielding = getShieldingType(botState, part.def.slot); // Check for crit immunity or shielding (15)
+
+    if (critical) {
+      critical = !botState.immunities.includes(botTypes_1.BotImmunity.Criticals) && shielding == undefined;
+    } // Check for spectrum engine explosion (17)
+    // TODO apply damage
+
+
+    const engineExplosion = part.def.slot === itemTypes_1.ItemSlot.Power && common_1.randomInt(0, 99) < spectrum; // Protection can't get crit, only receives 20% more damage
+
+    if (critical && part.protection) {
+      critical = false;
+      damage = Math.trunc(1.2 * damage);
+    } // Reduce damage for powered armor/siege mode (18)
+    // TODO enemy siege mode
+
+
+    if (part.selfDamageReduction !== 0) {
+      damage = damage * Math.trunc(part.selfDamageReduction);
+    } // Apply disruption (18)
+    // TODO
+
+
+    if (shielding != undefined) {
+      // Handle slot shielding reduction
+      // Note: shielding may absorb more damage than integrity
+      const shieldingDamage = Math.trunc(shielding.reduction * damage);
+      shielding.part.integrity -= shieldingDamage;
+      damage = damage - shieldingDamage;
+    }
+
+    let destroyed = part.integrity <= damage || critical || engineExplosion; // Check for sever            
+
+    if (!destroyed && damageType === itemTypes_1.DamageType.Slashing) {
+      // Sever has a damage / 3 % chance of happening against a
+      // non-destroyed part (23)
+      if (common_1.randomInt(0, 99) < Math.trunc(damage / 3)) {
+        destroyed = true;
+      }
+    }
+
+    if (destroyed) {
+      // Part destroyed, remove part and update bot state
+      botState.parts.splice(partIndex, 1);
+      botState.armorAnalyzedCoverage -= part.armorAnalyzedCoverage;
+      botState.totalCoverage -= part.coverage; // If the part was providing any damage resistances remove them now
+
+      if (part.resistances !== undefined) {
+        Object.keys(part.resistances).forEach(type => {
+          if (type in botState.resistances) {
+            botState.resistances[type] -= part.resistances[type];
+          }
+        });
+      }
+
+      if (part.integrity < damage && !part.protection && canOverflow && !critical) {
+        // Handle overflow damage if excess damage was dealt 
+        // against a non-protection part (19)
+        applyDamageChunk(damage - part.integrity, damageType, false, true, false, 0, 0, false);
+      }
+
+      if (damageType === itemTypes_1.DamageType.Impact) {
+        // Apply 25-150% random corruption to the bot after 
+        // destroying a part (affected by EM resistance) (23)
+        let corruption = common_1.randomInt(25, 150);
+        corruption = calculateResistDamage(botState, corruption, itemTypes_1.DamageType.Electromagnetic);
+        botState.corruption += corruption;
+      }
+
+      part.integrity = 0;
+      updateWeaponsAccuracy(state);
+    } else {
+      // Part not destroyed, just reduce integrity
+      part.integrity -= damage;
+    }
+  } // Apply damage 
+
+
+  chunks.forEach(chunk => {
+    applyDamageChunk(chunk.realDamage, chunk.damageType, chunk.critical, false, chunk.forceCore, chunk.disruptChance, chunk.spectrum, chunk.armorAnalyzed); // Apply corruption (23)
+
+    if (damageType === itemTypes_1.DamageType.Electromagnetic) {
+      // Check for corruption ignore chance
+      const corruptionIgnorePart = getDefensiveStatePart(botState.defensiveState.corruptionIgnore);
+
+      if (corruptionIgnorePart === undefined || common_1.randomInt(0, 99) >= corruptionIgnorePart.chance) {
+        const corruptionPercent = common_1.randomInt(50, 150) / 100;
+        const corruption = chunk.originalDamage * corruptionPercent;
+        botState.corruption += corruption;
+      }
+    }
+  });
+} // Returns a clone of a bot state
+// This is not a deep copy, any fields that can be modified are deep-copied
+// but immutable fields are not.
+
+
+function cloneBotState(botState) {
+  const resistances = {};
+  Object.keys(botState.resistances).forEach(type => resistances[type] = botState.resistances[type]);
+  const newState = {
+    armorAnalyzedCoverage: botState.armorAnalyzedCoverage,
+    coreCoverage: botState.coreCoverage,
+    coreDisrupted: botState.coreDisrupted,
+    coreIntegrity: botState.coreIntegrity,
+    corruption: botState.corruption,
+    def: botState.def,
+    defensiveState: undefined,
+    externalDamageReduction: botState.externalDamageReduction,
+    immunities: botState.immunities,
+    initialCoreIntegrity: botState.initialCoreIntegrity,
+    parts: botState.parts.map(p => {
+      return {
+        armorAnalyzedCoverage: p.armorAnalyzedCoverage,
+        coverage: p.coverage,
+        def: p.def,
+        integrity: p.integrity,
+        protection: p.protection,
+        selfDamageReduction: p.selfDamageReduction
+      };
+    }),
+    regen: botState.regen,
+    resistances: resistances,
+    totalCoverage: botState.totalCoverage
+  };
+  newState.defensiveState = getBotDefensiveState(newState.parts, newState.externalDamageReduction);
+  return newState;
+} // Calculates the resisted damage for a bot given the initial damage value
+
+
+function calculateResistDamage(botState, damage, damageType) {
+  if (damageType in botState.resistances) {
+    return Math.trunc(damage * (1 - botState.resistances[damageType] / 100));
+  }
+
+  return damage;
+}
+
+exports.calculateResistDamage = calculateResistDamage; // Returns a bot's defensive state based on parts, also adds new relevant 
+// properties to parts
+// Adding ad-hoc properties is a little messy but making a bunch of wrapper
+// objects wouldn't really do very much
+
+function getBotDefensiveState(parts, externalDamageReduction) {
+  const state = {
+    antimissile: [],
+    avoid: [],
+    corruptionIgnore: [],
+    damageReduction: [],
+    rangedAvoid: [],
+    shieldings: {
+      "Core": [],
+      "Power": [],
+      "Propulsion": [],
+      "Utility": [],
+      "Weapon": []
+    }
+  };
+  parts.forEach(part => {
+    const name = part.def.name;
+    const specialItem = specialItems[name];
+
+    if (specialItem === undefined) {
+      return;
+    }
+
+    if (specialItem.category === categoryAntimissile) {
+      // Antimissile System-like part
+      state.antimissile.push({
+        chance: specialItem.chance,
+        part: part
+      });
+    } else if (specialItem.category === categoryAvoid) {
+      // Reaction Control System-like part
+      // Leg/hover/flight determination done at accuracy update time
+      state.avoid.push({
+        legs: specialItem.legs,
+        other: specialItem.other,
+        part: part
+      });
+    } else if (specialItem.category === categoryCorruptionIgnore) {
+      // Dynamic Insulation System
+      state.corruptionIgnore.push({
+        chance: specialItem.ignore,
+        part: part
+      });
+    } else if (specialItem.category === categoryDamageReduction) {
+      // Force field-like part
+      state.damageReduction.push({
+        part: part,
+        reduction: specialItem.reduction
+      });
+    } else if (specialItem.category === categoryResist) {
+      // Damage type resist part
+      part.resistances = specialItem.resists;
+    } else if (specialItem.category === categoryRangedAvoid) {
+      // Phase Shifters
+      state.rangedAvoid.push({
+        avoid: specialItem.avoid,
+        part: part
+      });
+    } else if (specialItem.category === categorySelfDamageReduction) {
+      // Powered armor-like part
+      part.selfDamageReduction = specialItem.reduction;
+    } else if (specialItem.category === categoryShielding) {
+      // Core/slot shielding
+      state.shieldings[specialItem.slot].push({
+        part: part,
+        reduction: specialItem.percent
+      });
+    }
+  }); // Sort damage reduction (11)
+
+  if (externalDamageReduction in externalDamageReductionMap) {
+    const reduction = externalDamageReductionMap[externalDamageReduction];
+
+    if (state.damageReduction.length === 0) {
+      // If no other damage reduction no need to sort
+      state.damageReduction.push({
+        reduction: reduction,
+        part: {
+          armorAnalyzedCoverage: 0,
+          coverage: 0,
+          def: undefined,
+          integrity: 1,
+          protection: false,
+          selfDamageReduction: 0
+        }
+      });
+    } else {
+      const existingIndex = damageReductionSortOrder.indexOf(state.damageReduction[0].part.def.name);
+      const newIndex = damageReductionSortOrder.indexOf(externalDamageReduction); // Use sort order to decide to insert before or after
+
+      if (newIndex < existingIndex) {
+        state.damageReduction.unshift({
+          reduction: reduction,
+          part: {
+            armorAnalyzedCoverage: 0,
+            coverage: 0,
+            def: undefined,
+            integrity: 1,
+            protection: false,
+            selfDamageReduction: 0
+          }
+        });
+      } else {
+        state.damageReduction.push({
+          reduction: reduction,
+          part: {
+            armorAnalyzedCoverage: 0,
+            coverage: 0,
+            def: undefined,
+            integrity: 1,
+            protection: false,
+            selfDamageReduction: 0
+          }
+        });
+      }
+    }
+  } // All other parts should technically be sorted as well.
+  // However, in game no bot ever has duplicate mixed-level defenses,
+  // some have multiples of the same level like 2 base weapon shieldings on 
+  // Warbot which, but that doesn't require sorting anyways.
+
+
+  return state;
+}
+
+exports.getBotDefensiveState = getBotDefensiveState; // Tries to get a bot defensive state part from an array
+// Parts will be removed from the array if their integrity has dropped below 0
+
+function getDefensiveStatePart(array) {
+  let part = undefined;
+
+  while (array.length > 0) {
+    if (array[0].part.integrity > 0) {
+      // Found a good part, use it here
+      part = array[0];
+      break;
+    } else {
+      // Found destroyed part, remove from array
+      array.shift();
+    }
+  }
+
+  return part;
+} // Determines the part that was hit by an attack
+
+
+function getHitPart(botState, damageType, isOverflow, forceCore, armorAnalyzed) {
+  let part = undefined;
+  let partIndex;
+
+  if (forceCore) {// Keep part undefined for core hit
+  } else {
+    if (damageType === itemTypes_1.DamageType.Impact) {
+      // Impact damage targets core and all parts with equal probability
+      const coverageHit = common_1.randomInt(0, botState.parts.length);
+
+      if (coverageHit < botState.parts.length) {
+        partIndex = coverageHit;
+        part = botState.parts[partIndex];
+      } else {// Keep part undefined for core hit
+      }
+    } else if (isOverflow) {
+      const protectionParts = botState.parts.filter(p => p.protection && p.coverage > 0);
+
+      if (protectionParts.length > 0) {
+        // Handle overflow damage specially when there's armor,
+        // overflow into a random armor piece based on coverage (20)
+        let coverageHit = common_1.randomInt(0, protectionParts.reduce((prev, part) => prev + part.coverage, 0));
+
+        for (let i = 0; i < protectionParts.length; i++) {
+          coverageHit -= protectionParts[i].coverage;
+
+          if (coverageHit < 0) {
+            part = protectionParts[i];
+            break;
+          } // If it's a core hit we'll run through all parts and exit
+          // the loop with part still equal to undefined
+
+        }
+
+        partIndex = botState.parts.indexOf(part);
+      } // If no protection parts fall into standard coverage behavior
+
+    }
+
+    if (part === undefined) {
+      // Piercing damage gets double core exposure
+      const coreCoverageBonus = damageType === itemTypes_1.DamageType.Piercing ? botState.coreCoverage : 0;
+
+      if (armorAnalyzed) {
+        // Determine part based on reduced armor coverage
+        const totalCoverage = botState.armorAnalyzedCoverage + coreCoverageBonus;
+        let coverageHit = common_1.randomInt(0, totalCoverage - 1);
+
+        for (partIndex = 0; partIndex < botState.parts.length; partIndex++) {
+          // Subtract part's armor analyzed coverage to see if we got a hit
+          coverageHit -= botState.parts[partIndex].armorAnalyzedCoverage;
+
+          if (coverageHit < 0) {
+            part = botState.parts[partIndex];
+            break;
+          } // If it's a core hit we'll run through all parts and exit
+          // the loop with part still equal to undefined
+
+        }
+      } else {
+        // Determine part based on regular coverage
+        const totalCoverage = botState.totalCoverage + coreCoverageBonus;
+        let coverageHit = common_1.randomInt(0, totalCoverage - 1);
+
+        for (partIndex = 0; partIndex < botState.parts.length; partIndex++) {
+          // Subtract part's coverage to see if we got a hit
+          coverageHit -= botState.parts[partIndex].coverage;
+
+          if (coverageHit < 0) {
+            part = botState.parts[partIndex];
+            break;
+          } // If it's a core hit we'll run through all parts and exit
+          // the loop with part still equal to undefined
+
+        }
+      }
+    }
+  }
+
+  if (part === undefined) {
+    partIndex = -1;
+  }
+
+  return {
+    part: part,
+    partIndex: partIndex
+  };
+} // Calculates a weapon's recoil based on the number of treads and other recoil reduction
+
+
+function getRecoil(weaponDef, numTreads, recoilReduction) {
+  let recoil = 0; // Add recoil if siege mode not active
+
+  if (weaponDef.recoil !== undefined) {
+    recoil += weaponDef.recoil;
+    recoil -= numTreads;
+    recoil -= recoilReduction;
+  } // Make sure we don't have negative recoil
+
+
+  return Math.max(recoil, 0);
+}
+
+exports.getRecoil = getRecoil;
+const regenRegex = /Core Regeneration \((\d*)\)/; // Gets the core regen value for a bot, otherwise 0
+
+function getRegen(bot) {
+  const traits = bot.traits;
+
+  for (let i = 0; i < traits.length; i++) {
+    const result = regenRegex.exec(traits[i]);
+
+    if (result != null) {
+      return parseInt(result[1]);
+    }
+  }
+
+  return 0;
+}
+
+exports.getRegen = getRegen; // Gets the volley time given an array of ranged weapons
+
+function getRangedVolleyTime(weapons, cyclerModifier) {
+  let volleyTime;
+
+  if (weapons.length in exports.volleyTimeMap) {
+    volleyTime = exports.volleyTimeMap[weapons.length];
+  } else {
+    // No additional penalty past 6 weapons
+    volleyTime = 400;
+  }
+
+  weapons.forEach(weapon => {
+    // Apply individual delays
+    volleyTime += weapon.delay;
+  });
+  volleyTime *= cyclerModifier; // Min time is capped at 25
+
+  return Math.trunc(Math.max(25, volleyTime));
+}
+
+exports.getRangedVolleyTime = getRangedVolleyTime; // Tries to get a bot's first shielding for a specific slot
+// Parts will be removed from the array if their integrity has dropped below 0
+
+function getShieldingType(botState, slot) {
+  return getDefensiveStatePart(botState.defensiveState.shieldings[slot]);
+}
+
+const simulationEndConditions = {
+  "Kill": function (botState) {
+    return botState.coreIntegrity <= 0 || botState.corruption >= 100;
+  },
+  "Kill or Core Disrupt": function (botState) {
+    return botState.coreIntegrity <= 0 || botState.corruption >= 100 || botState.coreDisrupted;
+  },
+  "Kill or No Power": function (botState) {
+    return botState.coreIntegrity <= 0 || botState.corruption >= 100 || botState.parts.every(part => part.def.slot != itemTypes_1.ItemSlot.Power);
+  },
+  "Kill or No Weapons": function (botState) {
+    return botState.coreIntegrity <= 0 || botState.corruption >= 100 || botState.parts.every(part => part.def.slot != itemTypes_1.ItemSlot.Weapon);
+  },
+  "Architect Tele (80% integrity, 1 weapon, or 1 prop)": function (botState) {
+    return botState.coreIntegrity <= botState.initialCoreIntegrity * 0.8 || botState.parts.filter(part => part.def.slot === itemTypes_1.ItemSlot.Weapon).length === 1 || botState.parts.filter(part => part.def.slot === itemTypes_1.ItemSlot.Propulsion).length === 1;
+  }
+}; // Fully simulates rounds of combat to a kill a bot from an initial state
+
+function simulateCombat(state) {
+  // Clone initial bot state
+  const botState = cloneBotState(state.initialBotState);
+  state.botState = botState;
+  const offensiveState = state.offensiveState;
+  let volleys = 0;
+  let oldTus = 0;
+  state.tus = 0; // Update initial accuracy
+
+  updateWeaponsAccuracy(state);
+  const endCondition = simulationEndConditions[state.endCondition]; // Update initial sneak attack state
+
+  offensiveState.sneakAttack = offensiveState.sneakAttackStrategy === "All" || offensiveState.sneakAttackStrategy === "First Only"; // Update initial momentum
+
+  offensiveState.momentum.current = offensiveState.momentum.bonus + offensiveState.momentum.initial;
+
+  while (!endCondition(botState)) {
+    // Apply core regen
+    const lastCompletedTurns = Math.trunc(oldTus / 100);
+    const newCompletedTurns = Math.trunc(state.tus / 100);
+    const regenIntegrity = botState.regen * (newCompletedTurns - lastCompletedTurns);
+    botState.coreIntegrity = Math.min(botState.initialCoreIntegrity, botState.coreIntegrity + regenIntegrity); // Process each volley
+
+    volleys += 1;
+    let volleyTime = offensiveState.volleyTime;
+
+    if (offensiveState.melee) {
+      // Always do primary attack
+      simulateWeapon(state, state.weapons[0]); // Handle followups chances
+
+      for (let i = 1; i < state.weapons.length; i++) {
+        if (common_1.randomInt(0, 99) < offensiveState.followupChances[i - 1]) {
+          simulateWeapon(state, state.weapons[i]); // Add followup delay, 50% of normal
+
+          volleyTime += 0.5 * state.weapons[i].delay;
+        }
+      } // Apply volley modifier (actuators) here since the total time
+      // can't be known ahead of time
+
+
+      volleyTime *= offensiveState.volleyTimeModifier;
+
+      if (volleys === 1) {
+        // Disable sneak attack if active only for the first turn
+        if (offensiveState.sneakAttackStrategy === "First Only") {
+          offensiveState.sneakAttack = false;
+        } // Remove initial momentum
+
+
+        offensiveState.momentum.current = offensiveState.momentum.bonus;
+      }
+    } else {
+      state.weapons.forEach(weapon => simulateWeapon(state, weapon));
+    }
+
+    if (volleys >= exports.maxVolleys) {
+      // Exceeded max volleys and combat will likely never complete
+      // Just bail here
+      return false;
+    } // Update TUs and time based changes
+
+
+    oldTus = state.tus;
+    state.tus += volleyTime; // Update accuracy when crossing siege mode activation
+
+    if (!offensiveState.melee && oldTus < offensiveState.siegeBonus.tus && state.tus > offensiveState.siegeBonus.tus) {
+      updateWeaponsAccuracy(state);
+    }
+  } // Update kill dictionaries
+
+
+  if (volleys in state.killVolleys) {
+    state.killVolleys[volleys] += 1;
+  } else {
+    state.killVolleys[volleys] = 1;
+  }
+
+  if (state.tus in state.killTus) {
+    state.killTus[state.tus] += 1;
+  } else {
+    state.killTus[state.tus] = 1;
+  }
+
+  return true;
+}
+
+exports.simulateCombat = simulateCombat; // Simulates 1 weapon's damage in a volley
+
+function simulateWeapon(state, weapon) {
+  const botState = state.botState;
+  const offensiveState = state.offensiveState;
+
+  for (let i = 0; i < weapon.numProjectiles; i++) {
+    // Check if the attack was a sneak attack or was a hit.
+    // Technically sneak attacks can miss, but not under any realistic
+    // scenario I could find. Sneak attacks force a base accuracy of 120%,
+    // seemingly overriding other penalties like size or defensive 
+    // utilities like Reaction Control Systems. The most it seems to 
+    // take into account is -targeting, the lowest of which
+    // (CR-A16's Pointy Stick) only has -20%, making this always a
+    // guaranteed hit.
+    let hit = offensiveState.melee && offensiveState.sneakAttack || common_1.randomInt(0, 99) < weapon.accuracy;
+
+    if (hit && weapon.isMissile) {
+      // Check for an antimissile intercept
+      const part = getDefensiveStatePart(botState.defensiveState.antimissile);
+
+      if (part != undefined) {
+        const intercept = part.chance; // Check once per tile
+        // Note: even though the utilities have a range of 3 there are
+        // still 4 attempts at an intercept because the projectile can
+        // be intercepted on the same tile as the bot is currently on
+        // before the damage is applied.
+        // See below, @ is cogmind, i is intercept bot, 
+        // . is empty space, and x is intercept roll
+        // @ . . . i
+        // @ x . . i
+        // @ . x . i
+        // @ . . x i
+        // @ . . . x
+
+        const numChanges = Math.min(4, offensiveState.distance);
+
+        for (let i = 0; i < numChanges; i++) {
+          if (common_1.randomInt(0, 99) < intercept) {
+            hit = false;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!hit) {
+      continue;
+    }
+
+    if (weapon.damageType != undefined) {
+      // Calculate base damage, then apply overloads, momentum,
+      // and sneak attacks (2)
+      let damage = common_1.randomInt(weapon.damageMin, weapon.damageMax); // Apply overload damage doubling
+
+      if (weapon.overloaded) {
+        damage *= 2;
+
+        if (offensiveState.overloadBonus !== 0) {
+          // Apply additional overload bonus
+          damage = Math.trunc((1 + offensiveState.overloadBonus) * damage);
+        }
+      } // Apply momentum bonus
+      // ([momentum] * [speed%] / 1200) * 40)
+
+
+      if (offensiveState.melee && offensiveState.momentum.current > 0) {
+        const speedPercent = 100 / offensiveState.speed * 100;
+        let momentumMultiplier = offensiveState.momentum.current * speedPercent / 1200 * 40; // Cap at 1-40
+
+        momentumMultiplier = Math.trunc(momentumMultiplier);
+        momentumMultiplier = Math.max(1, momentumMultiplier);
+        momentumMultiplier = Math.min(40, momentumMultiplier);
+
+        if (weapon.damageType === itemTypes_1.DamageType.Piercing) {
+          // Piercing gets double bonus (not double cap)
+          momentumMultiplier *= 2;
+        }
+
+        momentumMultiplier = momentumMultiplier / 100 + 1;
+        damage = Math.trunc(momentumMultiplier * damage);
+      } // Apply double damage sneak attack bonus
+
+
+      if (offensiveState.melee && offensiveState.sneakAttack) {
+        damage *= 2;
+      } // Add analysis (3)
+
+
+      if (offensiveState.analysis) {
+        damage = Math.trunc(1.1 * damage);
+      } // Add accelerator (5)
+
+
+      if (weapon.accelerated) {
+        damage = Math.trunc(offensiveState.chargerBonus * damage);
+      } // Apply resistances (6)
+
+
+      damage = calculateResistDamage(botState, damage, weapon.damageType); // Check for armor integrity analyzer
+
+      const armorAnalyzed = common_1.randomInt(0, 99) < offensiveState.armorAnalyzerChance; // Check for core analyzer (8)
+
+      const coreAnalyzed = common_1.randomInt(0, 99) < offensiveState.coreAnalyzerChance; // Check for crit (9)
+
+      const critical = common_1.randomInt(0, 99) < weapon.critical;
+
+      if (damage > 0) {
+        applyDamage(state, botState, damage, critical, armorAnalyzed, coreAnalyzed, weapon.disruption, weapon.spectrum, weapon.overflow, weapon.damageType);
+      }
+    }
+
+    if (weapon.explosionType != undefined) {
+      // Apply explosion damage (2)
+      let damage = common_1.randomInt(weapon.explosionMin, weapon.explosionMax); // Apply resistances (6)
+
+      damage = calculateResistDamage(botState, damage, weapon.explosionType);
+
+      if (damage > 0) {
+        applyDamage(state, botState, damage, false, false, false, weapon.disruption, weapon.explosionSpectrum, weapon.overflow, weapon.explosionType);
+      }
+    }
+  }
+} // Updates all calculated weapon accuracies
+
+
+function updateWeaponsAccuracy(state) {
+  const offensiveState = state.offensiveState;
+  const botState = state.botState;
+  let perWeaponBonus = 0; // Flying/hovering enemy penalty
+  // TODO handle bots becoming overweight
+
+  const botDef = botState.def;
+  const movement = botDef.movement;
+
+  if (movement.includes("Hovering") || movement.includes("Flying")) {
+    perWeaponBonus -= 10;
+  } // Subtract always avoid util (reaction control system)
+
+
+  const avoidPart = getDefensiveStatePart(botState.defensiveState.avoid);
+
+  if (avoidPart != undefined) {
+    if (movement.includes("Walking")) {
+      perWeaponBonus -= avoidPart.legs;
+    } else {
+      // TODO - doesn't matter now but should make sure hover/flight is active here
+      perWeaponBonus -= avoidPart.other;
+    }
+  }
+
+  if (offensiveState.analysis) {
+    perWeaponBonus += 5;
+  }
+
+  let siegeBonus = 0;
+
+  if (offensiveState.melee) {
+    // Add melee analysis bonuses
+    for (let i = 0; i < meleeAnalysisAccuracy.length; i++) {
+      perWeaponBonus += offensiveState.meleeAnalysis[i] * meleeAnalysisAccuracy[i];
+    }
+  } else {
+    // Add (low) distance bonus
+    perWeaponBonus += offensiveState.distance < 6 ? (6 - offensiveState.distance) * 3 : 0; // Add siege bonus
+
+    const siege = offensiveState.siegeBonus;
+
+    if (state.tus >= siege.tus) {
+      siegeBonus = siege.bonus;
+    }
+
+    perWeaponBonus += siegeBonus; // Subtract ranged avoid util (phase shifter)
+
+    const rangedAvoidPart = getDefensiveStatePart(botState.defensiveState.rangedAvoid);
+
+    if (rangedAvoidPart != undefined) {
+      perWeaponBonus -= rangedAvoidPart.avoid;
+    }
+  }
+
+  state.weapons.forEach(weapon => {
+    if (weapon.def.waypoints !== undefined) {
+      // Guided weapons always have 100% accuracy
+      weapon.accuracy = 100;
+      return;
+    }
+
+    let accuracy = weapon.baseAccuracy + perWeaponBonus;
+
+    if (!offensiveState.melee && siegeBonus === 0) {
+      // Subtract recoil if siege mode inactive
+      accuracy -= offensiveState.recoil - getRecoil(weapon.def, offensiveState.numTreads, offensiveState.recoilReduction);
+    } // Cap accuracy
+
+
+    let max = offensiveState.melee ? maxRangedAccuracy : maxMeleeAccuracy;
+    weapon.accuracy = Math.min(max, Math.max(accuracy, minAccuracy));
+  });
+}
+},{"./botTypes":"ts/botTypes.ts","./common":"ts/common.ts","./itemTypes":"ts/itemTypes.ts"}],"ts/simulatorTypes.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.EndCondition = exports.SneakAttackStrategy = void 0;
+var SneakAttackStrategy;
+
+(function (SneakAttackStrategy) {
+  SneakAttackStrategy["None"] = "None";
+  SneakAttackStrategy["FirstOnly"] = "First Only";
+  SneakAttackStrategy["All"] = "All";
+})(SneakAttackStrategy = exports.SneakAttackStrategy || (exports.SneakAttackStrategy = {}));
+
+;
+var EndCondition;
+
+(function (EndCondition) {
+  EndCondition["Kill"] = "Kill";
+  EndCondition["KillOrDisrupt"] = "Kill or Core Disrupt";
+  EndCondition["KillOrPower"] = "Kill or No Power";
+  EndCondition["KillOrWeapons"] = "Kill or No Weapons";
+  EndCondition["Tele"] = "Architect Tele (80% integrity, 1 weapon, or 1 prop)";
+})(EndCondition = exports.EndCondition || (exports.EndCondition = {}));
+
+;
+},{}],"../node_modules/popper.js/dist/esm/popper.js":[function(require,module,exports) {
 var global = arguments[3];
 "use strict";
 
@@ -70769,34 +70931,7 @@ var define;
     });
   })(jQuery);
 });
-},{"jquery":"../node_modules/jquery/dist/jquery.js"}],"ts/simulatorTypes.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.EndCondition = exports.SneakAttackStrategy = void 0;
-var SneakAttackStrategy;
-
-(function (SneakAttackStrategy) {
-  SneakAttackStrategy["None"] = "None";
-  SneakAttackStrategy["FirstOnly"] = "First Only";
-  SneakAttackStrategy["All"] = "All";
-})(SneakAttackStrategy = exports.SneakAttackStrategy || (exports.SneakAttackStrategy = {}));
-
-;
-var EndCondition;
-
-(function (EndCondition) {
-  EndCondition["Kill"] = "Kill";
-  EndCondition["KillOrDisrupt"] = "Kill or Core Disrupt";
-  EndCondition["KillOrPower"] = "Kill or No Power";
-  EndCondition["KillOrWeapons"] = "Kill or No Weapons";
-  EndCondition["Tele"] = "Architect Tele (80% integrity, 1 weapon, or 1 prop)";
-})(EndCondition = exports.EndCondition || (exports.EndCondition = {}));
-
-;
-},{}],"ts/simulator.ts":[function(require,module,exports) {
+},{"jquery":"../node_modules/jquery/dist/jquery.js"}],"ts/simulator.ts":[function(require,module,exports) {
 "use strict";
 
 var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -70837,7 +70972,13 @@ Object.defineProperty(exports, "__esModule", {
 
 const common_1 = require("./common");
 
+const commonJquery_1 = require("./commonJquery");
+
+const itemTypes_1 = require("./itemTypes");
+
 const simulatorCalcs_1 = require("./simulatorCalcs");
+
+const simulatorTypes_1 = require("./simulatorTypes");
 
 require("bootstrap");
 
@@ -70846,10 +70987,6 @@ const chart_js_1 = require("chart.js");
 const jQuery = __importStar(require("jquery"));
 
 require("bootstrap-select");
-
-const itemTypes_1 = require("./itemTypes");
-
-const simulatorTypes_1 = require("./simulatorTypes");
 
 const jq = jQuery.noConflict();
 jq(function ($) {
@@ -70865,8 +71002,7 @@ jq(function ($) {
   let currentComparisonData;
   const comparisonBorderColors = ['rgba(228, 26, 28, .8)', 'rgba(55, 126, 184, .8)', 'rgba(36, 192, 36, .8)', 'rgba(152, 78, 163, .8)', 'rgba(255, 127, 0, .8)', 'rgba(255, 255, 51, .8)']; // Array of colors currently used to try to avoid duplicating colors when possible
 
-  const comparisonColorsUsed = comparisonBorderColors.map(() => 0);
-  const spectrumRegex = /\w* \((\d*)\)/; // Flag to cancel a simulation
+  const comparisonColorsUsed = comparisonBorderColors.map(() => 0); // Flag to cancel a simulation
 
   let cancelled = false; // Actuator array name to followup chance increase map
 
@@ -70943,7 +71079,14 @@ jq(function ($) {
 
   const meleeAnalysisMinDamageIncrease = [2, 3, 4, 6]; // Melee weapon types
 
-  const meleeTypes = [itemTypes_1.ItemType.ImpactWeapon, itemTypes_1.ItemType.PiercingWeapon, itemTypes_1.ItemType.SlashingWeapon, itemTypes_1.ItemType.SpecialMeleeWeapon]; // Ranged weapon types
+  const meleeTypes = [itemTypes_1.ItemType.ImpactWeapon, itemTypes_1.ItemType.PiercingWeapon, itemTypes_1.ItemType.SlashingWeapon, itemTypes_1.ItemType.SpecialMeleeWeapon]; // Overload util to damage bonus map
+
+  const overloadMap = {
+    "0%: None": 0,
+    "50%: Overload Amplifier": .5,
+    "75%: Imp. Overload Amplifier": .75,
+    "100%: Adv. Overload Amplifier": 1
+  }; // Ranged weapon types
 
   const rangedTypes = [itemTypes_1.ItemType.BallisticCannon, itemTypes_1.ItemType.BallisticGun, itemTypes_1.ItemType.EnergyCannon, itemTypes_1.ItemType.EnergyGun, itemTypes_1.ItemType.Launcher, itemTypes_1.ItemType.SpecialWeapon]; // Bot size mode to accuracy bonus map
 
@@ -71059,7 +71202,7 @@ jq(function ($) {
 
 
   function addWeaponSelect(weaponName) {
-    const spoilersState = common_1.getSpoilersState();
+    const spoilersState = commonJquery_1.getSpoilersState();
     const container = $("#weaponSelectContainer");
     const melee = isMelee();
     const types = melee ? meleeTypes : rangedTypes;
@@ -71100,26 +71243,37 @@ jq(function ($) {
     }); // Sort and create weapon option HTML elements
 
     weapons.sort(common_1.gallerySort);
-    const weaponOptions = weapons.map(w => `<option>${w}</option>`).join(); // Add elements
+    const weaponOptions = weapons.map(w => `<option>${w}</option>`).join(); // Create elements elements
 
     const parent = $('<div class="input-group mt-1"></div>');
     const selectLabel = $('<span class="input-group-text" data-toggle="tooltip" title="Name of an equipped weapon to fire">Weapon</span>');
     const select = $(`<select class="selectpicker" data-live-search="true">${weaponOptions}</select>`);
     const helpButton = $('<button class="btn weapon-help-btn" data-html=true data-toggle="popover">?</button>');
+    const overloadContainer = $('<div class="btn-group btn-group-toggle ml-2" data-toggle="buttons"></div>');
+    const overloadLabelContainer = $('<div class="input-group-prepend" data-toggle="tooltip" title="Whether to fire the weapon as overloaded"></div>');
+    const overloadLabel = $('<span class="input-group-text">Overload</span>');
+    const noLabel = $('<label class="btn"><input type="radio" name="options">No</input></label>');
+    const yesLabel = $('<label class="btn"><input type="radio" name="options">Yes</input></label>');
     const numberLabel = $(`
         <div class="input-group-prepend ml-2" data-toggle="tooltip" title="How many weapons of this type to have equipped.">
             <span class="input-group-text">Number</span>
         </div>`);
     const number = $('<input class="form-control" placeholder="1"></input>');
-    const deleteButton = $('<button class="btn ml-2" data-toggle="tooltip" title="Removes the weapon.">X</button>');
+    const deleteButton = $('<button class="btn ml-2" data-toggle="tooltip" title="Removes the weapon.">X</button>'); // Add elements to DOM
+
     container.append(parent);
     parent.append(selectLabel);
     parent.append(select);
     parent.append(helpButton);
+    parent.append(overloadContainer);
+    overloadContainer.append(overloadLabelContainer);
+    overloadLabelContainer.append(overloadLabel);
+    overloadContainer.append(noLabel);
+    overloadContainer.append(yesLabel);
     parent.append(numberLabel);
     parent.append(number);
     parent.append(deleteButton);
-    deleteButton.tooltip();
+    commonJquery_1.resetButtonGroup(overloadContainer);
     deleteButton.on("click", () => {
       // Ensure the last dropdown is always empty
       if (parent.next().length === 0) {
@@ -71131,30 +71285,43 @@ jq(function ($) {
       deleteButton.tooltip("dispose");
       parent.remove();
     });
-    select.selectpicker("val", weaponName); // Set initial weapon info if valid
+    select.selectpicker("val", weaponName);
 
-    if (weaponName in common_1.itemData) {
-      const weapon = common_1.itemData[weaponName];
-      helpButton.attr("data-content", common_1.createItemDataContent(weapon));
-      helpButton.popover();
-    } // Add changed event
+    const updateContent = weaponName => {
+      let weapon;
 
+      if (weaponName in common_1.itemData) {
+        weapon = common_1.itemData[weaponName];
+        helpButton.attr("data-content", common_1.createItemDataContent(weapon));
+        helpButton.popover();
+      }
+
+      if (weapon === undefined || weapon.overloadStability === undefined) {
+        // If no valid weapon or can't be overloaded reset/hide the overload option
+        commonJquery_1.resetButtonGroup(overloadContainer);
+        overloadContainer.addClass("not-visible");
+      } else {
+        // Otherwise show the overload option
+        overloadContainer.removeClass("not-visible");
+      }
+    }; // Set initial weapon info
+
+
+    updateContent(weaponName); // Update content when the weapon selection changes
 
     select.on("changed.bs.select", () => {
       if (parent.next().length === 0) {
         addWeaponSelect("");
-      } // Update item info
+      }
 
-
-      const weapon = common_1.itemData[select.selectpicker("val")];
-      helpButton.attr("data-content", common_1.createItemDataContent(weapon));
-      helpButton.popover();
+      updateContent(select.selectpicker("val"));
     });
     select.parent().addClass("weapon-dropdown"); // Enable tooltips
 
     deleteButton.tooltip();
     numberLabel.tooltip();
-    selectLabel.tooltip(); // Minor hack, the btn-light class is auto-added to dropdowns with search 
+    selectLabel.tooltip();
+    overloadLabelContainer.tooltip(); // Minor hack, the btn-light class is auto-added to dropdowns with search 
     // but it doesn't really fit with everything else
 
     parent.find(".btn-light").removeClass("btn-light");
@@ -71183,10 +71350,10 @@ jq(function ($) {
   function init() {
     common_1.initData(); // Load spoilers saved state
 
-    $("#spoilers").text(common_1.getSpoilersState()); // Set initial state
+    $("#spoilers").text(commonJquery_1.getSpoilersState()); // Set initial state
 
-    common_1.resetButtonGroup($("#combatTypeContainer"));
-    common_1.resetButtonGroup($("#xAxisContainer"));
+    commonJquery_1.resetButtonGroup($("#combatTypeContainer"));
+    commonJquery_1.resetButtonGroup($("#xAxisContainer"));
     $("#comparisonChartNameInput").val("");
     resetValues();
     updateChoices(); // Register handlers
@@ -71229,9 +71396,12 @@ jq(function ($) {
       comparisonChart.update();
     });
     $(window).on("click", e => {
-      // If clicking outside of a popover close the current one
       if ($(e.target).parents(".popover").length === 0 && $(".popover").length >= 1) {
+        // If clicking outside of a popover close the current one
         $('[data-toggle="popover"]').not(e.target).popover("hide");
+      } else if ($(e.target).parents(".popover").length === 1 && $(".popover").length > 1) {
+        // If clicking inside of a popover close any nested popovers
+        $(e.target).parents(".popover").find('.bot-popover-item').not(e.target).not($(e.target).parents()).popover("hide");
       }
     }); // Enable tooltips/popovers
 
@@ -71239,7 +71409,8 @@ jq(function ($) {
 
     const bot = common_1.botData[$("#botSelect").selectpicker("val")];
     $("#enemyInfoButton").attr("data-content", common_1.createBotDataContent(bot));
-    $("#enemyInfoButton").popover(); // These divs are created at runtime so have to do this at init
+    $("#enemyInfoButton").popover();
+    commonJquery_1.enableBotInfoItemPopovers($("#enemyInfoButton")); // These divs are created at runtime so have to do this at init
 
     $("#damageReductionSelect").parent().addClass("percent-dropdown");
     $("#botSelectContainer > div").addClass("enemy-dropdown");
@@ -71247,6 +71418,7 @@ jq(function ($) {
     $("#chargerSelect").parent().addClass("percent-dropdown");
     $("#kinecelleratorSelect").parent().addClass("percent-dropdown");
     $("#cyclerSelect").parent().addClass("percent-dropdown");
+    $("#overloadSelect").parent().addClass("percent-dropdown");
     $("#armorIntegSelect").parent().addClass("percent-dropdown");
     $("#coreAnalyzerSelect").parent().addClass("percent-dropdown");
     $("#targetAnalyzerSelect").parent().addClass("percent-dropdown");
@@ -71383,15 +71555,16 @@ jq(function ($) {
 
   function resetValues() {
     // Reset button groups
-    common_1.resetButtonGroup($("#analysisContainer"));
-    common_1.resetButtonGroup($("#movedContainer"));
-    common_1.resetButtonGroup($("#siegeModeContainer")); // Reset dropdowns
+    commonJquery_1.resetButtonGroup($("#analysisContainer"));
+    commonJquery_1.resetButtonGroup($("#movedContainer"));
+    commonJquery_1.resetButtonGroup($("#siegeModeContainer")); // Reset dropdowns
 
     resetDropdown($("#damageReductionSelect"));
     resetDropdown($("#siegeSelect"));
     resetDropdown($("#chargerSelect"));
     resetDropdown($("#kinecelleratorSelect"));
     resetDropdown($("#cyclerSelect"));
+    resetDropdown($("#overloadSelect"));
     resetDropdown($("#armorIntegSelect"));
     resetDropdown($("#coreAnalyzerSelect"));
     resetDropdown($("#targetAnalyzerSelect"));
@@ -71400,10 +71573,11 @@ jq(function ($) {
     resetDropdown($("#sneakAttackSelect"));
     resetDropdown($("#endConditionSelect")); // Reset text inputs
 
-    $("#distanceInput").val("");
     $("#numFightsInput").val("");
     $("#targetingInput").val("");
     $("#treadsInput").val("");
+    $("#distanceInput").val("");
+    $("#recoilInput").val("");
     $("#meleeAnalysisContainer > input").val("");
     $("#speedInput").val("");
     $("#bonusMomentumInput").val("");
@@ -71451,6 +71625,8 @@ jq(function ($) {
     func($("#chargerSelect").next());
     func($("#kinecelleratorSelect").next());
     func($("#cyclerSelect").next());
+    func($("#recoilInput"));
+    func($("#overloadSelect").next());
     func($("#meleeAnalysisContainer > input"));
     func($("#actuatorSelect").next());
     func($("#actuatorArraySelect").next());
@@ -71482,7 +71658,7 @@ jq(function ($) {
   function simulate() {
     // Check inputs first
     const botName = $("#botSelect").selectpicker("val");
-    const weaponDefs = [];
+    const userWeapons = [];
     $("#weaponSelectContainer select").each((_, s) => {
       const name = $(s).selectpicker("val");
 
@@ -71490,9 +71666,13 @@ jq(function ($) {
         const weapon = common_1.itemData[name]; // Tread invalid or unfilled numbers as 1
 
         const number = parseIntOrDefault($(s).parent().nextAll("input").val(), 1);
+        const overloaded = !$(s).parent().nextAll(".btn-group").children("label").first().hasClass("active");
 
         for (let i = 0; i < number; i++) {
-          weaponDefs.push(weapon);
+          userWeapons.push({
+            def: weapon,
+            overloaded: overloaded
+          });
         }
       }
     });
@@ -71502,7 +71682,7 @@ jq(function ($) {
       return;
     }
 
-    if (weaponDefs.length === 0) {
+    if (userWeapons.length === 0) {
       setStatusText("There must be at least 1 weapon selected.");
       return;
     } // Set up initial calculation state
@@ -71571,15 +71751,18 @@ jq(function ($) {
     if (distance <= 1) {
       // Less than or equal to 1, just assign to 1
       distance = 1;
-    }
+    } // Recoil reduction
 
-    const allRecoil = weaponDefs.reduce((prev, weapon) => simulatorCalcs_1.getRecoil(weapon, numTreads) + prev, 0); // Target Analyzer crit bonus
+
+    const recoilReduction = parseIntOrDefault($("#recoilInput").val(), 0);
+    const allRecoil = userWeapons.reduce((prev, weapon) => simulatorCalcs_1.getRecoil(weapon.def, numTreads, recoilReduction) + prev, 0); // Target Analyzer crit bonus
 
     const targetAnalyzerName = $("#targetAnalyzerSelect").selectpicker("val");
     const critBonus = targetAnalyzerMap[targetAnalyzerName];
-    const weapons = weaponDefs.map((weapon, i) => {
+    const weapons = userWeapons.map((weapon, i) => {
       var _a;
 
+      const def = weapon.def;
       let damageMin = 0;
       let damageMax = 0;
       let damageType = undefined;
@@ -71587,23 +71770,21 @@ jq(function ($) {
       let explosionMax = 0;
       let explosionType = undefined;
 
-      if (weapon.damage !== undefined) {
+      if (def.damage !== undefined) {
         // Found regular damage
-        if (weapon.damage.includes("-")) {
-          const split = weapon.damage.split("-");
+        if (def.damage.includes("-")) {
+          const split = def.damage.split("-");
           damageMin = parseInt(split[0]);
           damageMax = parseInt(split[1]);
         } else {
-          damageMin = parseInt(weapon.damage);
+          damageMin = parseInt(def.damage);
           damageMax = damageMin;
         }
 
-        if (weapon.type === itemTypes_1.ItemType.BallisticGun || weapon.type === itemTypes_1.ItemType.BallisticCannon) {
+        if (def.type === itemTypes_1.ItemType.BallisticGun || def.type === itemTypes_1.ItemType.BallisticCannon) {
           // Increase minimum damage for kinecellerators (2)
           const kinecelleratorName = $("#kinecelleratorSelect").selectpicker("val");
-          const kinecelleratorBonus = kinecelleratorMap[kinecelleratorName]; // Double damage for overloading (2)
-          // TODO
-          // Ensure min damage can't exceed max
+          const kinecelleratorBonus = kinecelleratorMap[kinecelleratorName]; // Ensure min damage can't exceed max
 
           damageMin = Math.min(Math.trunc(damageMin * kinecelleratorBonus), damageMax);
         } else if (melee) {
@@ -71618,25 +71799,25 @@ jq(function ($) {
           damageMin = Math.min(minDamageIncrease + damageMin, damageMax);
         }
 
-        damageType = weapon.damageType;
+        damageType = def.damageType;
       }
 
-      if (weapon.explosionDamage !== undefined) {
+      if (def.explosionDamage !== undefined) {
         // Found explosion damage
-        if (weapon.explosionDamage.includes("-")) {
-          const split = weapon.explosionDamage.split("-");
+        if (def.explosionDamage.includes("-")) {
+          const split = def.explosionDamage.split("-");
           explosionMin = parseInt(split[0]);
           explosionMax = parseInt(split[1]);
         } else {
-          explosionMin = parseInt(weapon.explosionDamage);
+          explosionMin = parseInt(def.explosionDamage);
           explosionMax = explosionMin;
         }
 
-        explosionType = weapon.explosionType;
+        explosionType = def.explosionType;
       } // Get crit chance, only apply target analyzer if there's a specific bonus
 
 
-      const critical = weapon.critical === undefined || weapon.critical === 0 ? 0 : weapon.critical + critBonus; // Calculate base accuracy that can't change over the course of the fight
+      const critical = def.critical === undefined || def.critical === 0 ? 0 : def.critical + critBonus; // Calculate base accuracy that can't change over the course of the fight
 
       let baseAccuracy = melee ? initialMeleeAccuracy : initialRangedAccuracy;
 
@@ -71652,11 +71833,11 @@ jq(function ($) {
       } // Builtin targeting
 
 
-      if (weapon.targeting !== undefined) {
-        baseAccuracy += weapon.targeting;
+      if (def.targeting !== undefined) {
+        baseAccuracy += def.targeting;
       }
 
-      const delay = parseIntOrDefault(weapon.delay, 0); // Follow-up attacks on melee gain a 10% bonus to targeting
+      const delay = parseIntOrDefault(def.delay, 0); // Follow-up attacks on melee gain a 10% bonus to targeting
 
       const followUp = melee && i != 0;
 
@@ -71664,20 +71845,20 @@ jq(function ($) {
         baseAccuracy += 10;
       }
 
-      const disruption = (_a = weapon.disruption) !== null && _a !== void 0 ? _a : 0;
-      const spectrum = weapon.spectrum === undefined ? 0 : spectrumMap[weapon.spectrum];
-      const explosionSpectrum = weapon.explosionSpectrum === undefined ? 0 : spectrumMap[weapon.explosionSpectrum]; // All launchers are missiles except for special cases
+      const disruption = (_a = def.disruption) !== null && _a !== void 0 ? _a : 0;
+      const spectrum = def.spectrum === undefined ? 0 : spectrumMap[def.spectrum];
+      const explosionSpectrum = def.explosionSpectrum === undefined ? 0 : spectrumMap[def.explosionSpectrum]; // All launchers are missiles except for special cases
 
-      const isMissile = weapon.type === "Launcher" && weapon.name != "Sigix Terminator" && weapon.name != "Supercharged Sigix Terminator" && weapon.name != "Vortex Catalyst Activator";
+      const isMissile = def.type === "Launcher" && def.name != "Sigix Terminator" && def.name != "Supercharged Sigix Terminator" && def.name != "Vortex Catalyst Activator";
       const state = {
-        accelerated: weapon.type === "Energy Gun" || weapon.type === "Energy Cannon",
+        accelerated: def.type === "Energy Gun" || def.type === "Energy Cannon",
         accuracy: baseAccuracy,
         baseAccuracy: baseAccuracy,
         critical: critical,
         damageMin: damageMin,
         damageMax: damageMax,
         damageType: damageType,
-        def: weapon,
+        def: def,
         delay: delay,
         disruption: disruption,
         explosionMin: explosionMin,
@@ -71685,8 +71866,9 @@ jq(function ($) {
         explosionSpectrum: explosionSpectrum,
         explosionType: explosionType,
         isMissile: isMissile,
-        numProjectiles: weapon.projectileCount,
-        overflow: !weapon.type.includes("Gun"),
+        numProjectiles: def.projectileCount,
+        overflow: !def.type.includes("Gun"),
+        overloaded: weapon.overloaded,
         spectrum: spectrum
       };
       return state;
@@ -71702,7 +71884,10 @@ jq(function ($) {
     const coreAnalyzerChance = coreAnalyzerMap[coreAnalyzerName]; // Actuator Array chance
 
     const actuatorArrayName = $("#actuatorArraySelect").selectpicker("val");
-    const actuatorArrayBonus = actuatorArrayMap[actuatorArrayName]; // Calculate followup chance
+    const actuatorArrayBonus = actuatorArrayMap[actuatorArrayName]; // Overload bonus damage
+
+    const overloadName = $("#overloadSelect").selectpicker("val");
+    const overloadBonus = overloadMap[overloadName]; // Calculate followup chance
 
     const followupChances = [];
 
@@ -71746,7 +71931,9 @@ jq(function ($) {
         initial: initialMomentum
       },
       numTreads: numTreads,
+      overloadBonus: overloadBonus,
       recoil: allRecoil,
+      recoilReduction: recoilReduction,
       siegeBonus: siegeBonus,
       sneakAttack: false,
       sneakAttackStrategy: sneakAttackStrategy,
@@ -71924,7 +72111,7 @@ jq(function ($) {
 
 
   function updateChoices() {
-    const spoilersState = common_1.getSpoilersState(); // Update all bot selections after saving old pick
+    const spoilersState = commonJquery_1.getSpoilersState(); // Update all bot selections after saving old pick
 
     const select = $("#botSelect");
     const oldBot = select.selectpicker("val");
@@ -71974,6 +72161,7 @@ jq(function ($) {
 
     setVisibility($("#rangedAccuracyContainer"), !melee);
     setVisibility($("#rangedUtilitiesContainer"), !melee);
+    setVisibility($("#rangedUtilitiesContainer2"), !melee);
     setVisibility($("#meleeAnalysisContainer"), melee);
     setVisibility($("#meleeBehaviorContainer"), melee);
     setVisibility($("#meleeUtilitiesContainer"), melee); // Reset with 1 preset weapon and one empty one
@@ -71984,7 +72172,7 @@ jq(function ($) {
     addWeaponSelect("");
   }
 });
-},{"./common":"ts/common.ts","./simulatorCalcs":"ts/simulatorCalcs.ts","bootstrap":"../node_modules/bootstrap/dist/js/bootstrap.js","chart.js":"../node_modules/chart.js/dist/Chart.js","jquery":"../node_modules/jquery/dist/jquery.js","bootstrap-select":"../node_modules/bootstrap-select/dist/js/bootstrap-select.js","./itemTypes":"ts/itemTypes.ts","./simulatorTypes":"ts/simulatorTypes.ts"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./common":"ts/common.ts","./commonJquery":"ts/commonJquery.ts","./itemTypes":"ts/itemTypes.ts","./simulatorCalcs":"ts/simulatorCalcs.ts","./simulatorTypes":"ts/simulatorTypes.ts","bootstrap":"../node_modules/bootstrap/dist/js/bootstrap.js","chart.js":"../node_modules/chart.js/dist/Chart.js","jquery":"../node_modules/jquery/dist/jquery.js","bootstrap-select":"../node_modules/bootstrap-select/dist/js/bootstrap-select.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -72012,7 +72200,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "46651" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "38751" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
