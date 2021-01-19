@@ -25143,7 +25143,7 @@ var __importStar = this && this.__importStar || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.valueOrDefault = exports.setSpoilersState = exports.randomInt = exports.resetButtonGroup = exports.initData = exports.nameToId = exports.getSpoilersState = exports.getNoPrefixName = exports.getItem = exports.getBot = exports.gallerySort = exports.flatten = exports.escapeHtml = exports.createItemDataContent = exports.createBotDataContent = exports.entityMap = exports.itemData = exports.botData = void 0; // Common code
+exports.valueOrDefault = exports.setSpoilersState = exports.randomInt = exports.resetButtonGroup = exports.initData = exports.nameToId = exports.getSpoilersState = exports.getSelectedButtonId = exports.getNoPrefixName = exports.getItem = exports.getBot = exports.gallerySort = exports.flatten = exports.escapeHtml = exports.createItemDataContent = exports.createBotDataContent = exports.entityMap = exports.itemData = exports.botData = void 0; // Common code
 
 const bots = __importStar(require("../json/bots.json"));
 
@@ -25935,7 +25935,13 @@ function getNoPrefixName(name) {
   return newName;
 }
 
-exports.getNoPrefixName = getNoPrefixName; // Gets the stored spoilers state
+exports.getNoPrefixName = getNoPrefixName; // Gets the ID of the selected button in a button group
+
+function getSelectedButtonId(selector) {
+  return selector.children(".active").attr("id");
+}
+
+exports.getSelectedButtonId = getSelectedButtonId; // Gets the stored spoilers state
 
 function getSpoilersState() {
   let value = valueOrDefault(window.localStorage.getItem("spoilers"), "None");
@@ -44741,7 +44747,7 @@ jq(function ($) {
       const depthNum = Math.abs(parseInt(depthValue));
 
       if (depthNum != NaN) {
-        const terminalModifier = terminalLevelMap[$("#schematicsContainer > label.active").attr("id")];
+        const terminalModifier = terminalLevelMap[common_1.getSelectedButtonId($("#schematicsContainer"))];
         const hackLevel = 10 - depthNum + terminalModifier;
         filters.push(item => {
           if (!item.hackable) {
@@ -44754,7 +44760,7 @@ jq(function ($) {
     } // Slot filter
 
 
-    const slotId = $("#slotsContainer > label.active").attr("id");
+    const slotId = common_1.getSelectedButtonId($("#slotsContainer"));
 
     if (slotId in slotMap) {
       const filterSlot = slotMap[slotId];
@@ -44762,7 +44768,7 @@ jq(function ($) {
     } // Type filter
 
 
-    const typeId = $("#typeFilters > div:not(\".not-visible\") > label.active").attr("id");
+    const typeId = common_1.getSelectedButtonId($("#typeFilters > div:not(\".not-visible\")"));
 
     if (typeId in typeMap) {
       const filterType = typeMap[typeId];
@@ -44770,7 +44776,7 @@ jq(function ($) {
     } // Category filter
 
 
-    const categoryId = $("#categoryContainer > label.active").attr("id");
+    const categoryId = common_1.getSelectedButtonId($("#categoryContainer"));
 
     if (categoryId in categoryIdMap) {
       const filterNum = categoryIdMap[categoryId];
@@ -44812,16 +44818,16 @@ jq(function ($) {
         $("#reset").tooltip("hide");
         resetFilters();
       });
-      $("#slotsContainer > label > input").on("click", () => {
+      $("#slotsContainer > label > input").on("change", () => {
         updateTypeFilters();
         updateItems();
       });
-      $("#schematicsContainer > label > input").on("click", updateItems);
-      $("#powerTypeContainer > label > input").on("click", updateItems);
-      $("#propTypeContainer > label > input").on("click", updateItems);
-      $("#utilTypeContainer > label > input").on("click", updateItems);
-      $("#weaponTypeContainer > label > input").on("click", updateItems);
-      $("#categoryContainer > label > input").on("click", updateItems);
+      $("#schematicsContainer > label > input").on("change", updateItems);
+      $("#powerTypeContainer > label > input").on("change", updateItems);
+      $("#propTypeContainer > label > input").on("change", updateItems);
+      $("#utilTypeContainer > label > input").on("change", updateItems);
+      $("#weaponTypeContainer > label > input").on("change", updateItems);
+      $("#categoryContainer > label > input").on("change", updateItems);
       $("#sortingContainer > div > button").on("click", () => {
         // Hide popovers when clicking a sort button
         $('[data-toggle="popover"]').popover("hide");
@@ -45189,7 +45195,7 @@ jq(function ($) {
   function updateTypeFilters() {
     // Hide all type filters
     Object.keys(slotIdToTypeIdMap).forEach(k => $(`#${slotIdToTypeIdMap[k]}`).addClass("not-visible"));
-    const activeSlotId = $("#slotsContainer > label.active").attr("id");
+    const activeSlotId = common_1.getSelectedButtonId($("#slotsContainer"));
 
     if (activeSlotId in slotIdToTypeIdMap) {
       $(`#${slotIdToTypeIdMap[activeSlotId]}`).removeClass("not-visible");
@@ -45224,7 +45230,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "46827" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "46651" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

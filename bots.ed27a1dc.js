@@ -25143,7 +25143,7 @@ var __importStar = this && this.__importStar || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.valueOrDefault = exports.setSpoilersState = exports.randomInt = exports.resetButtonGroup = exports.initData = exports.nameToId = exports.getSpoilersState = exports.getNoPrefixName = exports.getItem = exports.getBot = exports.gallerySort = exports.flatten = exports.escapeHtml = exports.createItemDataContent = exports.createBotDataContent = exports.entityMap = exports.itemData = exports.botData = void 0; // Common code
+exports.valueOrDefault = exports.setSpoilersState = exports.randomInt = exports.resetButtonGroup = exports.initData = exports.nameToId = exports.getSpoilersState = exports.getSelectedButtonId = exports.getNoPrefixName = exports.getItem = exports.getBot = exports.gallerySort = exports.flatten = exports.escapeHtml = exports.createItemDataContent = exports.createBotDataContent = exports.entityMap = exports.itemData = exports.botData = void 0; // Common code
 
 const bots = __importStar(require("../json/bots.json"));
 
@@ -25935,7 +25935,13 @@ function getNoPrefixName(name) {
   return newName;
 }
 
-exports.getNoPrefixName = getNoPrefixName; // Gets the stored spoilers state
+exports.getNoPrefixName = getNoPrefixName; // Gets the ID of the selected button in a button group
+
+function getSelectedButtonId(selector) {
+  return selector.children(".active").attr("id");
+}
+
+exports.getSelectedButtonId = getSelectedButtonId; // Gets the stored spoilers state
 
 function getSpoilersState() {
   let value = valueOrDefault(window.localStorage.getItem("spoilers"), "None");
@@ -44567,7 +44573,7 @@ jq(function ($) {
     const classValue = $("#class").val().toLowerCase();
 
     if (classValue.length > 0) {
-      filters.push(bot => bot["Class"].toLowerCase().includes(classValue));
+      filters.push(bot => bot.class.toLowerCase().includes(classValue));
     } // Part filter
 
 
@@ -44604,7 +44610,7 @@ jq(function ($) {
     } // Faction filter
 
 
-    const factionId = $("#factionContainer > label.active").attr("id");
+    const factionId = common_1.getSelectedButtonId($("#factionContainer"));
 
     if (factionId in factionIdToCategoryName) {
       const categoryName = factionIdToCategoryName[factionId];
@@ -44642,7 +44648,7 @@ jq(function ($) {
       $("#reset").tooltip("hide");
       resetFilters();
     });
-    $("#factionContainer > label > input").on("click", updateBots);
+    $("#factionContainer > label > input").on("change", updateBots);
     $(window).on("click", e => {
       // If clicking outside of a popover close the current one
       if ($(e.target).parents(".popover").length === 0 && $(".popover").length >= 1) {
@@ -44754,7 +44760,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "46827" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "46651" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

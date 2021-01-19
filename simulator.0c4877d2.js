@@ -25143,7 +25143,7 @@ var __importStar = this && this.__importStar || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.valueOrDefault = exports.setSpoilersState = exports.randomInt = exports.resetButtonGroup = exports.initData = exports.nameToId = exports.getSpoilersState = exports.getNoPrefixName = exports.getItem = exports.getBot = exports.gallerySort = exports.flatten = exports.escapeHtml = exports.createItemDataContent = exports.createBotDataContent = exports.entityMap = exports.itemData = exports.botData = void 0; // Common code
+exports.valueOrDefault = exports.setSpoilersState = exports.randomInt = exports.resetButtonGroup = exports.initData = exports.nameToId = exports.getSpoilersState = exports.getSelectedButtonId = exports.getNoPrefixName = exports.getItem = exports.getBot = exports.gallerySort = exports.flatten = exports.escapeHtml = exports.createItemDataContent = exports.createBotDataContent = exports.entityMap = exports.itemData = exports.botData = void 0; // Common code
 
 const bots = __importStar(require("../json/bots.json"));
 
@@ -25935,7 +25935,13 @@ function getNoPrefixName(name) {
   return newName;
 }
 
-exports.getNoPrefixName = getNoPrefixName; // Gets the stored spoilers state
+exports.getNoPrefixName = getNoPrefixName; // Gets the ID of the selected button in a button group
+
+function getSelectedButtonId(selector) {
+  return selector.children(".active").attr("id");
+}
+
+exports.getSelectedButtonId = getSelectedButtonId; // Gets the stored spoilers state
 
 function getSpoilersState() {
   let value = valueOrDefault(window.localStorage.getItem("spoilers"), "None");
@@ -71200,7 +71206,7 @@ jq(function ($) {
       const bot = common_1.botData[$("#botSelect").selectpicker("val")];
       $("#enemyInfoButton").attr("data-content", common_1.createBotDataContent(bot));
     });
-    $("#combatTypeContainer > label > input").on("click", () => {
+    $("#combatTypeContainer > label > input").on("change", () => {
       updateChoices();
     });
     $("#simulateButton").on("click", () => {
@@ -72006,7 +72012,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "46827" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "46651" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
