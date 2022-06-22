@@ -24761,10 +24761,13 @@ function createBotDataContent(bot) {
         ${textLine("Tier", bot.tier)}
         ${textLine("Threat", bot.threat)}
         ${textLine("Value", bot.value.toString())}
+        ${textLine("Energy Generation", bot.energyGeneration.toString())}
+        ${textLine("Heat Dissipation", bot.heatDissipation.toString())}
         ${textLine("Visual Range", bot.visualRange)}
         ${textLine("Memory", bot.memory)}
         ${textLine("Spot %", bot.spotPercent)}
         ${textLine("Movement", bot.movement)}
+        ${bot.movementOverloaded !== undefined ? `${textLine(" Overloaded", bot.movementOverloaded)}` : ""}
         ${rangeLine("Core Integrity", bot.coreIntegrity.toString(), bot.coreIntegrity, undefined, 0, bot.coreIntegrity, ColorScheme.Green)}
         ${rangeLineUnit("Core Exposure", bot.coreExposure.toString(), bot.coreExposure, "%", undefined, 0, 100, ColorScheme.LowGood)}
         ${textLine("Salvage Potential", bot.salvagePotential)}
@@ -25782,11 +25785,14 @@ function initData(items, bots) {
           coreExposure: parseInt(bot["Core Exposure %"]),
           coreIntegrity: parseInt(bot["Core Integrity"]),
           description: (_l = bot.Analysis) !== null && _l !== void 0 ? _l : "",
+          energyGeneration: parseIntOrDefault(bot["Energy Generation"], 0),
           fabrication: fabrication,
+          heatDissipation: parseIntOrDefault(bot["Heat Dissipation"], 0),
           immunities: (_m = bot.Immunities) !== null && _m !== void 0 ? _m : [],
           immunitiesString: (_p = (_o = bot.Immunities) === null || _o === void 0 ? void 0 : _o.join(", ")) !== null && _p !== void 0 ? _p : "",
           memory: bot.Memory,
-          movement: `${bot.Movement} (${bot.Speed})${bot["Overload Speed"] !== undefined ? ` Ovrload (${bot["Overload Speed"]})` : ""}`,
+          movement: `${bot.Movement} (${bot.Speed}/${bot["Speed %"]}%)`,
+          movementOverloaded: bot["Overload Speed"] !== undefined ? `${bot.Movement} (${bot["Overload Speed"]}/${bot["Overload Speed %"]}%)` : undefined,
           name: botName,
           profile: bot.Profile,
           rating: bot.Rating,
@@ -48038,21 +48044,14 @@ exports.volleyTimeMap = {
   6: 400
 }; // Applies a final calculated damage value to a bot, splitting into chunks if necessary
 
-function applyDamage(state, botState, damage, critical, armorAnalyzed, disruptChance, spectrum, canOverflow, damageType) {
-  const chunks = []; // Split into chunks each containing originalDamage for other calcs (9)
+function applyDamage(state, botState, totalDamage, numChunks, critical, isAoe, armorAnalyzed, disruptChance, spectrum, canOverflow, damageType) {
+  const chunks = []; // Split damage evenly between chunks while discarding the remainder
 
-  if (damageType === itemTypes_1.DamageType.Explosive) {
-    if (critical !== undefined) {
-      throw "Explosive damage can't be a crit";
-    } // Split explosive damage randomly into 1-3 chunks (9)
-    // EX damage can never crit, ignore armor, disrupt, explicitly
-    // target core, or have a spectrum
-    // Note: The remainder from the division is explicitly thrown out
+  const damage = Math.trunc(totalDamage / numChunks);
 
-
-    const numChunks = common_1.randomInt(1, 3);
-
+  if (isAoe) {
     for (let i = 0; i < numChunks; i++) {
+      // Aoe damage ignores a lot of specific mechanics
       chunks.push({
         armorAnalyzed: false,
         critical: undefined,
@@ -48060,24 +48059,25 @@ function applyDamage(state, botState, damage, critical, armorAnalyzed, disruptCh
         damageType: damageType,
         disruptChance: 0,
         forceCore: false,
-        originalDamage: Math.trunc(damage / numChunks),
+        originalDamage: damage,
         realDamage: 0,
         spectrum: 0
       });
     }
   } else {
-    // Non-EX damage is done in a single chunk
-    chunks.push({
-      armorAnalyzed: armorAnalyzed,
-      coreBonus: state.offensiveState.coreAnalyzerChance,
-      critical: critical,
-      damageType: damageType,
-      disruptChance: disruptChance,
-      forceCore: false,
-      originalDamage: damage,
-      realDamage: 0,
-      spectrum: spectrum
-    });
+    for (let i = 0; i < numChunks; i++) {
+      chunks.push({
+        armorAnalyzed: armorAnalyzed,
+        coreBonus: state.offensiveState.coreAnalyzerChance,
+        critical: critical,
+        damageType: damageType,
+        disruptChance: disruptChance,
+        forceCore: false,
+        originalDamage: damage,
+        realDamage: 0,
+        spectrum: spectrum
+      });
+    }
   } // Apply any additional damage reduction (10)
 
 
@@ -48953,7 +48953,7 @@ function simulateWeapon(state, weapon) {
     damage = calculateResistDamage(botState, damage, itemTypes_1.DamageType.Impact);
 
     if (damage > 0) {
-      applyDamage(state, botState, damage, undefined, false, weapon.disruption, weapon.spectrum, weapon.overflow, itemTypes_1.DamageType.Impact);
+      applyDamage(state, botState, damage, 1, undefined, false, false, false, false, true, itemTypes_1.DamageType.Impact);
     }
 
     return;
@@ -49054,7 +49054,7 @@ function simulateWeapon(state, weapon) {
       const didCritical = common_1.randomInt(0, 99) < weapon.criticalChance;
 
       if (damage > 0) {
-        applyDamage(state, botState, damage, didCritical ? weapon.criticalType : undefined, armorAnalyzed, weapon.disruption, weapon.spectrum, weapon.overflow, weapon.damageType);
+        applyDamage(state, botState, damage, 1, didCritical ? weapon.criticalType : undefined, false, armorAnalyzed, weapon.disruption, weapon.spectrum, weapon.overflow, weapon.damageType);
       }
     }
 
@@ -49063,9 +49063,21 @@ function simulateWeapon(state, weapon) {
       let damage = common_1.randomInt(weapon.explosionMin, weapon.explosionMax); // Apply resistances (6)
 
       damage = calculateResistDamage(botState, damage, weapon.explosionType);
+      let numChunks;
+
+      if (weapon.explosionType === itemTypes_1.DamageType.Explosive) {
+        // Explosive damage is split into 1-3 chunks at random (9)
+        numChunks = common_1.randomInt(1, 3);
+      } else if (weapon.def.name === "Sigix Terminator" || weapon.def.name === "Supercharged Sigix Terminator") {
+        // ST/SST have special chunk rules
+        numChunks = common_1.randomInt(3, 6);
+      } else {
+        numChunks = 1;
+      }
 
       if (damage > 0) {
-        applyDamage(state, botState, damage, undefined, false, weapon.disruption, weapon.explosionSpectrum, weapon.overflow, weapon.explosionType);
+        applyDamage(state, botState, damage, numChunks, undefined, true, false, weapon.explosionDisruption, 0, // Explosion spectrum only applies to engines on ground, ignore it here
+        weapon.overflow, weapon.explosionType);
       }
     }
   }
@@ -50642,7 +50654,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "34039" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "42155" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
