@@ -44863,6 +44863,24 @@ function createBotDataContent(bot) {
     return ratingArray.reduce((sum, val) => sum + val, 0) / ratingArray.length;
   }
 
+  function getSchematicDepthString(bot) {
+    function capRange(depth) {
+      return Math.floor(Math.max(Math.min(10, depth), 1));
+    }
+
+    if (bot.fabrication !== undefined) {
+      let levelOneDepth = 11 - parseInt(bot.tier);
+      let levelTwoDepth = levelOneDepth + 1;
+      let levelThreeDepth = levelTwoDepth + 1;
+      levelOneDepth = capRange(levelOneDepth);
+      levelTwoDepth = capRange(levelTwoDepth);
+      levelThreeDepth = capRange(levelThreeDepth);
+      return `1/-${levelOneDepth}  2/-${levelTwoDepth}  3/-${levelThreeDepth}`;
+    }
+
+    return "";
+  }
+
   function itemLine(itemString) {
     itemString = itemString.padEnd(46);
     return "" + '<pre class="popover-part">' + '<span class="bot-popover-item-bracket bot-popover-item-bracket-invisible">[</span>' + `${itemString}` + '<span class="bot-popover-item-bracket bot-popover-item-bracket-invisible">]</span>' + '</pre>';
@@ -44901,6 +44919,9 @@ function createBotDataContent(bot) {
         ${rangeLine("Core Integrity", bot.coreIntegrity.toString(), bot.coreIntegrity, undefined, 0, bot.coreIntegrity, ColorScheme.Green)}
         ${rangeLineUnit("Core Exposure", bot.coreExposure.toString(), bot.coreExposure, "%", undefined, 0, 100, ColorScheme.LowGood)}
         ${textLine("Salvage Potential", bot.salvagePotential)}
+        ${textLine("Salvage Potential", bot.salvagePotential)}
+        ${textLineWithDefault("Schematic", bot.fabrication !== undefined ? "Hackable" : undefined, "N/A")}
+        ${bot.fabrication !== undefined ? textLine(" Min Terminal/Depth", getSchematicDepthString(bot)) : ""}
         ${emptyLine}
         ${summaryLine("Armament")}
         `; // Add armament items and options
@@ -45141,6 +45162,24 @@ function createItemDataContent(baseItem) {
     return undefined;
   }
 
+  function getSchematicDepthString(item) {
+    function capRange(depth) {
+      return Math.floor(Math.max(Math.min(10, depth), 1));
+    }
+
+    if (item.hackable) {
+      let levelOneDepth = 11 - item.rating;
+      let levelTwoDepth = levelOneDepth + 1;
+      let levelThreeDepth = levelTwoDepth + 1;
+      levelOneDepth = capRange(levelOneDepth);
+      levelTwoDepth = capRange(levelTwoDepth);
+      levelThreeDepth = capRange(levelThreeDepth);
+      return `1/-${levelOneDepth}  2/-${levelTwoDepth}  3/-${levelThreeDepth}`;
+    }
+
+    return "";
+  }
+
   function getSlotString(item) {
     let slotType = item.slot;
 
@@ -45178,6 +45217,7 @@ function createItemDataContent(baseItem) {
     ${rangeLine("Integrity", (baseItem.noRepairs ? "*" : "") + ((_b = baseItem.integrity) === null || _b === void 0 ? void 0 : _b.toString()), 1, undefined, 0, 1, ColorScheme.Green)}
     ${valueLine("Coverage", (_d = (_c = baseItem.coverage) === null || _c === void 0 ? void 0 : _c.toString()) !== null && _d !== void 0 ? _d : "0")}
     ${textLineWithDefault("Schematic", getSchematicString(baseItem), "N/A")}
+    ${baseItem.hackable ? textLine(" Min Terminal/Depth", getSchematicDepthString(baseItem)) : emptyLine}
     `;
 
   switch (baseItem.slot) {
@@ -45977,7 +46017,7 @@ function initData(items, bots) {
           components: (_k = bot.Components) !== null && _k !== void 0 ? _k : [],
           componentsString: (_l = bot["Components String"]) !== null && _l !== void 0 ? _l : "",
           coreCoverage: roughCoreCoverage,
-          coreExposure: parseInt(bot["Core Exposure %"]),
+          coreExposure: parseIntOrDefault(bot["Core Exposure %"], 0),
           coreIntegrity: parseInt(bot["Core Integrity"]),
           description: (_m = bot.Analysis) !== null && _m !== void 0 ? _m : "",
           energyGeneration: parseIntOrDefault(bot["Energy Generation"], 0),
@@ -55907,6 +55947,7 @@ jq(function ($) {
             ${compareHighGoodStat((_c = leftItem.coverage) !== null && _c !== void 0 ? _c : 0, (_d = rightItem.coverage) !== null && _d !== void 0 ? _d : 0)}
             ${emptyLine}
             ${emptyLine}
+            ${emptyLine}
         `; // Add upkeep if applicable
 
     if ((leftItem.slot === "Power" || leftItem.slot === "Propulsion" || leftItem.slot === "Utility") && (rightItem.slot === "Power" || rightItem.slot === "Propulsion" || rightItem.slot === "Utility")) {
@@ -57204,7 +57245,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "42583" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "39339" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
