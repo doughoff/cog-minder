@@ -1,0 +1,1 @@
+import"./common-iRmEkZzF.js";import{c as o,j as t,A as r}from"./App-iSmZ1Hh9.js";import"./items-QxHqxA7B.js";import"./chart-s5gNgz83.js";import"./bots-t-eGkHsJ.js";const e=document.getElementById("root"),p=o(e);p.render(t.jsx(r,{pageType:"About"}));
