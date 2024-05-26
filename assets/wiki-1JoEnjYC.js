@@ -784,7 +784,7 @@ Below is a list of all faction alignments available in the game and their compat
 Color|Will Follow|Hostile|Can be Ordered|Will Retaliate||
 Color not in list|[[CellStyle:Bad]]Pursues|[[CellStyle:Bad]]Yes|[[CellStyle:Bad]]No|[[CellStyle:Bad]]Yes||
 White|[[CellStyle:Good]]No|[[CellStyle:Good]]No|[[CellStyle:Bad]]No|[[CellStyle:Bad]]Yes||
-Purple|[[CellStyle:Good]Yes|[[CellStyle:Good]]No|[[CellStyle:Bad]]No|[[CellStyle:Bad]]Yes||
+Purple|[[CellStyle:Good]]Yes|[[CellStyle:Good]]No|[[CellStyle:Bad]]No|[[CellStyle:Bad]]Yes||
 Blue|[[CellStyle:Good]]Yes|[[CellStyle:Good]]No|[[CellStyle:Good]]Yes|[[CellStyle:Good]]No
 [[/Table]]
 [[Heading]]Orders[[/Heading]]
